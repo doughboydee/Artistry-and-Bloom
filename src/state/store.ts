@@ -60,6 +60,10 @@ interface AppState {
   naturalLashes: NaturalLashes
   showNaturalLashes: boolean
   showExtensions: boolean
+  /** On-lid lash map: zone boundaries + per-zone labels drawn at the eye. */
+  showLashMap: boolean
+  /** Precision mapping: check each zone's length against the natural lashes. */
+  showPrecision: boolean
   fitSettings: FitSettings
   fitResults: FitResults
   browParams: BrowParams
@@ -81,6 +85,8 @@ interface AppState {
   setNaturalParam: (key: keyof NaturalLashes, value: number) => void
   toggleNaturalLashes: () => void
   toggleExtensions: () => void
+  toggleLashMap: () => void
+  togglePrecision: () => void
   setFitSetting: <K extends keyof FitSettings>(key: K, value: FitSettings[K]) => void
   reportFitResult: (face: FaceId, eye: 'left' | 'right', summary: EyeFitSummary) => void
   setCompareMode: (on: boolean) => void
@@ -154,6 +160,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   toggleNaturalLashes: () => set((s) => ({ showNaturalLashes: !s.showNaturalLashes })),
   toggleExtensions: () => set((s) => ({ showExtensions: !s.showExtensions })),
+  showLashMap: false,
+  showPrecision: false,
+  toggleLashMap: () => set((s) => ({ showLashMap: !s.showLashMap })),
+  togglePrecision: () => set((s) => ({ showPrecision: !s.showPrecision })),
 
   fitSettings: { enabled: true, safetyMarginMm: 0.5, ghostThreshold: 0.5, showGhosts: true },
   fitResults: {},

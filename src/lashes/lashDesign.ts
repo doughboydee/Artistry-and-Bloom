@@ -18,6 +18,13 @@ export interface LashDesign {
   zones: LashZone[]
 }
 
+/**
+ * Precision mapping headroom: an extension should not exceed the natural
+ * lash it attaches to by more than ~2mm, or the weight strains the follicle
+ * and the set sheds early. (Industry guidance is 2–3mm; we flag at +2.)
+ */
+export const PRECISION_HEADROOM_MM = 2
+
 /** The client's own lashes, before any extensions. */
 export interface NaturalLashes {
   /** 0 = pointing downward, 0.5 = straight out, 1 = pointing upward. */

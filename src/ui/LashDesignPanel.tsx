@@ -2,7 +2,9 @@ import { CURL_FAMILIES } from '../lashes/curlProfiles'
 import {
   EXTENSION_DIAMETERS_MM,
   EXTENSION_LENGTHS_MM,
+  PRECISION_HEADROOM_MM,
   PRESET_MAPS,
+  agedNaturalLashes,
   type NaturalLashes,
   type ZoneCount,
 } from '../lashes/lashDesign'
@@ -35,6 +37,17 @@ export function LashDesignPanel() {
   const showExtensions = useAppStore((s) => s.showExtensions)
   const toggleNaturalLashes = useAppStore((s) => s.toggleNaturalLashes)
   const toggleExtensions = useAppStore((s) => s.toggleExtensions)
+  const showLashMap = useAppStore((s) => s.showLashMap)
+  const toggleLashMap = useAppStore((s) => s.toggleLashMap)
+  const showPrecision = useAppStore((s) => s.showPrecision)
+  const togglePrecision = useAppStore((s) => s.togglePrecision)
+  const activeFace = useAppStore((s) => (s.compareMode ? s.activeFace : 'A'))
+  const faceAge = useAppStore((s) => s.faces[activeFace].age)
+
+  // Precision mapping: the trainer generates the natural lashes, so it can
+  // check the +2mm rule exactly for the current client (age included).
+  const agedLen = agedNaturalLashes(natural, faceAge).lengthMm
+  const safeMax = agedLen + PRECISION_HEADROOM_MM
 
   return (
     <section style={{ marginTop: 20 }}>
@@ -89,7 +102,14 @@ export function LashDesignPanel() {
         </thead>
         <tbody>
           {design.zones.map((z, i) => (
-            <tr key={i}>
+            <tr
+              key={i}
+              style={
+                showPrecision && z.lengthMm > safeMax
+                  ? { outline: '1px solid #e6a23c', outlineOffset: -1 }
+                  : undefined
+              }
+            >
               <td style={{ padding: '3px 2px', opacity: 0.7 }}>{i + 1}</td>
               <td>
                 <select
@@ -167,7 +187,7 @@ export function LashDesignPanel() {
         />
       </label>
 
-      <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 12 }}>
+      <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 12, flexWrap: 'wrap' }}>
         <label style={{ display: 'flex', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
           <input type="checkbox" checked={showNatural} onChange={toggleNaturalLashes} />
           Natural
@@ -177,6 +197,37 @@ export function LashDesignPanel() {
           Extensions
         </label>
       </div>
+      <label style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12, cursor: 'pointer' }}>
+        <input type="checkbox" checked={showLashMap} onChange={toggleLashMap} />
+        Show lash map at the eye
+      </label>
+      {showLashMap && (
+        <div style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>
+          The map artists draw on an under-eye pad — zone boundaries and each zone's
+          length·curl, on the actual anatomy.
+        </div>
+      )}
+      <label style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12, cursor: 'pointer' }}>
+        <input type="checkbox" checked={showPrecision} onChange={togglePrecision} />
+        Precision check (against natural lashes)
+      </label>
+      {showPrecision && (
+        <div style={{ fontSize: 10, marginTop: 2 }}>
+          <span style={{ opacity: 0.55 }}>
+            This client's natural lashes measure {agedLen.toFixed(1)} mm, so the safe maximum is{' '}
+          </span>
+          <span style={{ color: '#7fd4c8' }}>{safeMax.toFixed(1)} mm</span>
+          <span style={{ opacity: 0.55 }}>
+            {' '}
+            (natural + {PRECISION_HEADROOM_MM} mm). Longer zones are flagged{' '}
+          </span>
+          <span style={{ color: '#e6a23c' }}>amber</span>
+          <span style={{ opacity: 0.55 }}>
+            {' '}
+            — too much weight for the follicle, even when the shape clears the lid.
+          </span>
+        </div>
+      )}
     </section>
   )
 }

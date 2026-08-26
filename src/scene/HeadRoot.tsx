@@ -8,6 +8,7 @@ import type { HeadModel } from '../head/HeadModel'
 import { SkinBVH } from '../fit/skinBvh'
 import { useAppStore, type FaceId } from '../state/store'
 import { BrowSet } from './BrowSet'
+import { LashMapOverlay } from './LashMapOverlay'
 import { LashSet } from './LashSet'
 import { MappingLines } from './MappingLines'
 
@@ -99,6 +100,7 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
       <BrowSet head={head} faceId={faceId} eye="left" />
       <BrowSet head={head} faceId={faceId} eye="right" />
       <MappingLines head={head} faceId={faceId} />
+      <LashMapOverlay head={head} faceId={faceId} />
     </group>
   )
 }
