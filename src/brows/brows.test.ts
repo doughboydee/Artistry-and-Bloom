@@ -4,12 +4,15 @@ import { NEUTRAL_PARAMS, type AnatomyParams, type Eye } from '../head/HeadModel'
 import { ProceduralHead } from '../head/procedural/ProceduralHead'
 import { DEFAULT_BROW_PARAMS } from './browDesign'
 import { buildBrowHairs } from './browFibers'
-import { computeMappingLines } from './mappingLines'
+import { computeMappingLines, computeMappingVisual, symmetryDeltas } from './mappingLines'
 
 const make = (params: AnatomyParams = NEUTRAL_PARAMS) => new ProceduralHead(params)
 
 const mapping = (head: ProceduralHead) =>
   computeMappingLines(head.getLandmarks(), (eye: Eye) => head.getBrowRegion(eye))
+
+const visual = (head: ProceduralHead, method: 'classic' | 'thread' | 'goldenRatio') =>
+  computeMappingVisual(method, head.getLandmarks(), (eye: Eye) => head.getBrowRegion(eye))
 
 describe('brow mapping lines', () => {
   it('orders the three points start < arch < tail laterally', () => {
@@ -45,6 +48,61 @@ describe('brow mapping lines', () => {
     for (const key of ['start', 'arch', 'tail'] as const) {
       expect(m.left[key].browPoint.y).toBeGreaterThan(pupilY + 12)
       expect(m.left[key].browPoint.y).toBeLessThan(pupilY + 40)
+    }
+  })
+})
+
+describe('brow mapping methods', () => {
+  it('thread method starts on the vertical line above the nostril wing', () => {
+    const head = make()
+    const v = visual(head, 'thread')
+    const nostril = head.getLandmarks().nostrilOuter
+    for (const eye of ['left', 'right'] as const) {
+      const start = v[eye].markers.find((m) => m.kind === 'start')!
+      expect(start.point.x).toBeCloseTo(nostril[eye].x, 5)
+    }
+  })
+
+  it('thread level check measures tail height minus start height', () => {
+    const v = visual(make(), 'thread')
+    for (const eye of ['left', 'right'] as const) {
+      const start = v[eye].markers.find((m) => m.kind === 'start')!.point.y
+      const tail = v[eye].markers.find((m) => m.kind === 'tail')!.point.y
+      expect(v[eye].levelDeltaMm!).toBeCloseTo(tail - start, 5)
+      // On this arch model the tail ends near the start's level — the check
+      // line itself must run horizontally from the start point.
+      const level = v[eye].lines.find((l) => l.style === 'level')!
+      expect(level.a.y).toBeCloseTo(level.b.y, 5)
+      expect(level.a.y).toBeCloseTo(start, 5)
+    }
+  })
+
+  it('golden-ratio arch divides start→tail at the phi point', () => {
+    const v = visual(make(), 'goldenRatio')
+    for (const eye of ['left', 'right'] as const) {
+      expect(v[eye].phiRatio!).toBeGreaterThan(1.55)
+      expect(v[eye].phiRatio!).toBeLessThan(1.7)
+    }
+  })
+
+  it('reports zero symmetry deltas on a symmetric face', () => {
+    for (const method of ['classic', 'thread', 'goldenRatio'] as const) {
+      const d = symmetryDeltas(visual(make(), method))
+      expect(Math.abs(d.start)).toBeLessThan(0.3)
+      expect(Math.abs(d.arch)).toBeLessThan(0.3)
+      expect(Math.abs(d.tail)).toBeLessThan(0.3)
+    }
+  })
+
+  it('every method lands its markers at brow height', () => {
+    const head = make()
+    const pupilY = head.getLandmarks().pupil.left.y
+    for (const method of ['classic', 'thread', 'goldenRatio'] as const) {
+      const v = visual(head, method)
+      for (const m of v.left.markers) {
+        expect(m.point.y).toBeGreaterThan(pupilY + 12)
+        expect(m.point.y).toBeLessThan(pupilY + 40)
+      }
     }
   })
 })

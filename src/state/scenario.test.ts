@@ -25,6 +25,7 @@ describe('scenario decoding is safe against malformed links', () => {
       lashDesign: JSON.parse(JSON.stringify(DEFAULT_DESIGN)) as Scenario['lashDesign'],
       naturalLashes: { growthDirection: 0.5, density: 0.6, lengthMm: 7, thickness: 0.5, curl: 0.4 },
       browParams: { density: 0.5, caliber: 0.5, growthDirection: 0.5, verticalOffset: 0.5, fullness: 0.5 },
+      browMappingMethod: 'thread',
       fitSettings: { enabled: true, safetyMarginMm: 0.5, ghostThreshold: 0.5, showGhosts: true },
       compareMode: true,
     }

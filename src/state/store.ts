@@ -3,6 +3,7 @@ import type { AnatomyParams } from '../head/HeadModel'
 import { NEUTRAL_PARAMS } from '../head/HeadModel'
 import type { BrowParams } from '../brows/browDesign'
 import { DEFAULT_BROW_PARAMS } from '../brows/browDesign'
+import type { BrowMappingMethod } from '../brows/mappingLines'
 import type { LashDesign, LashZone, NaturalLashes, ZoneCount } from '../lashes/lashDesign'
 import {
   DEFAULT_DESIGN,
@@ -32,6 +33,16 @@ export type FitResults = Partial<
   Record<FaceId, Partial<Record<'left' | 'right', EyeFitSummary>>>
 >
 
+/** Live measurements the brow-mapping overlay reports back for the panel. */
+export interface BrowMappingInfo {
+  /** Thread method: tail minus start height per side, mm. */
+  levelDeltaMm?: Record<'left' | 'right', number>
+  /** Golden-ratio method: measured start→arch : arch→tail per side. */
+  phiRatio?: Record<'left' | 'right', number>
+  /** Symmetry guides: left minus right marker heights, mm. */
+  symmetry?: Record<'start' | 'arch' | 'tail', number>
+}
+
 interface ViewState {
   preset: ViewPreset
   /** Bumped every time a preset button is clicked so the camera re-animates
@@ -54,6 +65,9 @@ interface AppState {
   browParams: BrowParams
   showBrows: boolean
   showBrowMapping: boolean
+  browMappingMethod: BrowMappingMethod
+  showSymmetryGuides: boolean
+  browMappingInfo: Partial<Record<FaceId, BrowMappingInfo>>
   /** Display name of the current head implementation (see head/headSource). */
   headSourceName: string
   setHeadSourceName: (name: string) => void
@@ -74,6 +88,9 @@ interface AppState {
   setBrowParam: (key: keyof BrowParams, value: number) => void
   toggleBrows: () => void
   toggleBrowMapping: () => void
+  setBrowMappingMethod: (m: BrowMappingMethod) => void
+  toggleSymmetryGuides: () => void
+  reportBrowMappingInfo: (face: FaceId, info: BrowMappingInfo) => void
   snapshotScenario: () => import('./scenario').Scenario
   applyScenario: (s: import('./scenario').Scenario) => void
 }
@@ -171,6 +188,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set((s) => ({ browParams: { ...s.browParams, [key]: value } })),
   toggleBrows: () => set((s) => ({ showBrows: !s.showBrows })),
   toggleBrowMapping: () => set((s) => ({ showBrowMapping: !s.showBrowMapping })),
+  browMappingMethod: 'classic',
+  showSymmetryGuides: false,
+  browMappingInfo: {},
+  setBrowMappingMethod: (m) => set({ browMappingMethod: m }),
+  toggleSymmetryGuides: () => set((s) => ({ showSymmetryGuides: !s.showSymmetryGuides })),
+  reportBrowMappingInfo: (face, info) =>
+    set((s) => ({ browMappingInfo: { ...s.browMappingInfo, [face]: info } })),
 
   snapshotScenario: () => {
     const s = get()
@@ -181,6 +205,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         lashDesign: s.lashDesign,
         naturalLashes: s.naturalLashes,
         browParams: s.browParams,
+        browMappingMethod: s.browMappingMethod,
         fitSettings: s.fitSettings,
         compareMode: s.compareMode,
       }),
@@ -196,6 +221,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       lashDesign: JSON.parse(JSON.stringify(scenario.lashDesign)),
       naturalLashes: { ...scenario.naturalLashes },
       browParams: { ...scenario.browParams },
+      browMappingMethod: scenario.browMappingMethod,
       fitSettings: { ...scenario.fitSettings },
       compareMode: scenario.compareMode,
       activeFace: 'A',

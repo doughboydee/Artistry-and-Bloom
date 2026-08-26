@@ -4,6 +4,7 @@ import type { BrowParams } from '../brows/browDesign'
 import { DEFAULT_BROW_PARAMS } from '../brows/browDesign'
 import type { LashDesign, NaturalLashes } from '../lashes/lashDesign'
 import { DEFAULT_DESIGN, DEFAULT_NATURAL_LASHES } from '../lashes/lashDesign'
+import type { BrowMappingMethod } from '../brows/mappingLines'
 import type { FaceId, FitSettings } from './store'
 
 /**
@@ -18,6 +19,7 @@ export interface Scenario {
   lashDesign: LashDesign
   naturalLashes: NaturalLashes
   browParams: BrowParams
+  browMappingMethod: BrowMappingMethod
   fitSettings: FitSettings
   compareMode: boolean
 }
@@ -108,6 +110,10 @@ export function sanitizeScenario(parsed: unknown): Scenario | null {
       verticalOffset: clampNum(brow.verticalOffset, DEFAULT_BROW_PARAMS.verticalOffset, 0, 1),
       fullness: clampNum(brow.fullness, DEFAULT_BROW_PARAMS.fullness, 0, 1),
     },
+    browMappingMethod:
+      p.browMappingMethod === 'thread' || p.browMappingMethod === 'goldenRatio'
+        ? p.browMappingMethod
+        : 'classic',
     fitSettings: {
       enabled: typeof fit.enabled === 'boolean' ? fit.enabled : true,
       safetyMarginMm: clampNum(fit.safetyMarginMm, 0.5, 0, 2),
@@ -165,6 +171,7 @@ export function builtInScenarios(): SavedScenario[] {
     lashDesign: JSON.parse(JSON.stringify(DEFAULT_DESIGN)) as LashDesign,
     naturalLashes: { ...DEFAULT_NATURAL_LASHES },
     browParams: { ...DEFAULT_BROW_PARAMS },
+    browMappingMethod: 'classic',
     fitSettings: { enabled: true, safetyMarginMm: 0.5, ghostThreshold: 0.5, showGhosts: true },
     compareMode: false,
     ...over,
