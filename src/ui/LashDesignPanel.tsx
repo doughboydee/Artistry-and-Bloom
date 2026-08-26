@@ -98,6 +98,7 @@ export function LashDesignPanel() {
             <th>Length</th>
             <th>Curl</th>
             <th>Diameter</th>
+            <th title="Wispy texture: alternating longer spikes within the zone">Wisp</th>
           </tr>
         </thead>
         <tbody>
@@ -148,6 +149,17 @@ export function LashDesignPanel() {
                       {d.toFixed(2)}
                     </option>
                   ))}
+                </select>
+              </td>
+              <td>
+                <select
+                  style={selectStyle}
+                  value={z.spikeRatio ?? 0}
+                  onChange={(e) => setZone(i, { spikeRatio: Number(e.target.value) })}
+                >
+                  <option value={0}>—</option>
+                  <option value={0.4}>soft</option>
+                  <option value={0.8}>spiky</option>
                 </select>
               </td>
             </tr>

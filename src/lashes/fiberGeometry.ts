@@ -245,12 +245,21 @@ export function buildExtensions(
   design: LashDesign,
 ): FiberSet {
   const specs: FiberSpec[] = []
+  let i = 0
   for (const a of anchors) {
     if (a.present > natural.density) continue
     const zone = zoneAt(design, a.t)
+    // Wispy texture: every third attached lash becomes a longer "spike",
+    // its neighbours slightly shorter — the alternating pattern is what
+    // reads as wispy rather than a solid fringe.
+    const spike = zone.spikeRatio ?? 0
+    const isSpike = i % 3 === 1
+    const lengthMm =
+      spike > 0 ? zone.lengthMm + (isSpike ? 2.5 * spike : -0.7 * spike) : zone.lengthMm
+    i++
     specs.push({
       t: a.t,
-      lengthMm: zone.lengthMm,
+      lengthMm,
       curl: zone.curl,
       // Extensions are glued along the natural lash base, so they inherit
       // the natural launch direction.

@@ -10,6 +10,12 @@ export interface LashZone {
   lengthMm: number
   curl: CurlFamily
   diameterMm: number
+  /**
+   * Wispy texture, 0..1: 0 = uniform length, 1 = strong "spikes" — every
+   * third lash runs ~2.5mm longer while its neighbours sit slightly shorter,
+   * the alternating pattern behind wispy / Kim K style sets.
+   */
+  spikeRatio?: number
 }
 
 export type ZoneCount = 3 | 5 | 7 | 9
@@ -64,10 +70,16 @@ export function agedNaturalLashes(n: NaturalLashes, age: number): NaturalLashes 
 export const EXTENSION_DIAMETERS_MM = [0.03, 0.05, 0.07, 0.1, 0.15, 0.2] as const
 export const EXTENSION_LENGTHS_MM = [8, 9, 10, 11, 12, 13, 14, 15] as const
 
-const zone = (lengthMm: number, curl: CurlFamily, diameterMm = 0.15): LashZone => ({
+const zone = (
+  lengthMm: number,
+  curl: CurlFamily,
+  diameterMm = 0.15,
+  spikeRatio = 0,
+): LashZone => ({
   lengthMm,
   curl,
   diameterMm,
+  spikeRatio,
 })
 
 /**
@@ -80,6 +92,27 @@ export const PRESET_MAPS: Record<string, LashZone[]> = {
   'doll eye': [zone(9, 'C'), zone(11, 'CC'), zone(12, 'CC'), zone(11, 'CC'), zone(9, 'C')],
   squirrel: [zone(9, 'C'), zone(10, 'CC'), zone(11, 'CC'), zone(12, 'D'), zone(10, 'C')],
   'open eye': [zone(9, 'CC'), zone(10, 'D'), zone(11, 'D'), zone(10, 'D'), zone(9, 'CC')],
+  // Elongates outward with a straighter, lower-lift curl at the tail — the
+  // pairing that also survives hooded lids.
+  'fox eye': [zone(8, 'C'), zone(9, 'C'), zone(10, 'CC'), zone(12, 'L'), zone(13, 'L')],
+  // A soft, short cat-eye for small or close-set eyes.
+  kitten: [zone(8, 'B'), zone(8, 'C'), zone(9, 'C'), zone(10, 'C'), zone(10, 'CC')],
+  // Doll shape with alternating spikes — the textured "wispy" set.
+  wispy: [
+    zone(9, 'C', 0.15, 0.8),
+    zone(10, 'CC', 0.15, 0.8),
+    zone(11, 'CC', 0.15, 0.8),
+    zone(10, 'CC', 0.15, 0.8),
+    zone(9, 'C', 0.15, 0.8),
+  ],
+  // Short dense L curls hug the lid margin like drawn eyeliner.
+  'eyeliner effect': [
+    zone(8, 'L', 0.2),
+    zone(8, 'L', 0.2),
+    zone(8, 'L', 0.2),
+    zone(8, 'L', 0.2),
+    zone(8, 'L', 0.2),
+  ],
 }
 
 export type PresetName = keyof typeof PRESET_MAPS

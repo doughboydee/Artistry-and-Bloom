@@ -66,7 +66,8 @@ export function LashMapOverlay({ head, faceId }: { head: HeadModel; faceId: Face
         const zone = design.zones[i]!
         const tm = (i + 0.5) / n
         labels.push({
-          text: `${zone.lengthMm}·${zone.curl}`,
+          // A trailing ~ marks a textured (wispy) zone.
+          text: `${zone.lengthMm}·${zone.curl}${(zone.spikeRatio ?? 0) > 0 ? '~' : ''}`,
           pos: [xAt(tm), baseY - 4.5, zAt(tm)],
           over: precision && zone.lengthMm > safeMax,
         })

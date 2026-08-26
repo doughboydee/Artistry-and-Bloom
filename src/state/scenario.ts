@@ -70,6 +70,7 @@ function sanitizeLashDesign(raw: unknown): LashDesign {
         lengthMm: clampNum(zz.lengthMm, 10, 4, 20),
         curl: (VALID_CURLS.has(zz.curl as string) ? zz.curl : 'C') as LashDesign['zones'][number]['curl'],
         diameterMm: clampNum(zz.diameterMm, 0.15, 0.03, 0.3),
+        spikeRatio: clampNum(zz.spikeRatio, 0, 0, 1),
       }
     }),
   }
@@ -177,7 +178,12 @@ export function builtInScenarios(): SavedScenario[] {
     ...over,
   })
   const dCurls = (lens: number[]): LashDesign => ({
-    zones: lens.map((lengthMm) => ({ lengthMm, curl: 'D' as const, diameterMm: 0.15 })),
+    zones: lens.map((lengthMm) => ({
+      lengthMm,
+      curl: 'D' as const,
+      diameterMm: 0.15,
+      spikeRatio: 0,
+    })),
   })
   return [
     {
