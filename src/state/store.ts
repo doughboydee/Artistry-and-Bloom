@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { AnatomyParams } from '../head/HeadModel'
 import { NEUTRAL_PARAMS } from '../head/HeadModel'
+import type { BrowParams } from '../brows/browDesign'
+import { DEFAULT_BROW_PARAMS } from '../brows/browDesign'
 import type { LashDesign, LashZone, NaturalLashes, ZoneCount } from '../lashes/lashDesign'
 import {
   DEFAULT_DESIGN,
@@ -49,6 +51,9 @@ interface AppState {
   showExtensions: boolean
   fitSettings: FitSettings
   fitResults: FitResults
+  browParams: BrowParams
+  showBrows: boolean
+  showBrowMapping: boolean
   setFaceParam: (face: FaceId, key: keyof AnatomyParams, value: number) => void
   resetFace: (face: FaceId) => void
   setPreset: (preset: ViewPreset) => void
@@ -63,6 +68,9 @@ interface AppState {
   reportFitResult: (face: FaceId, eye: 'left' | 'right', summary: EyeFitSummary) => void
   setCompareMode: (on: boolean) => void
   setActiveFace: (face: FaceId) => void
+  setBrowParam: (key: keyof BrowParams, value: number) => void
+  toggleBrows: () => void
+  toggleBrowMapping: () => void
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -141,4 +149,13 @@ export const useAppStore = create<AppState>()((set) => ({
 
   setCompareMode: (on) => set({ compareMode: on }),
   setActiveFace: (face) => set({ activeFace: face }),
+
+  browParams: { ...DEFAULT_BROW_PARAMS },
+  showBrows: true,
+  showBrowMapping: false,
+
+  setBrowParam: (key, value) =>
+    set((s) => ({ browParams: { ...s.browParams, [key]: value } })),
+  toggleBrows: () => set((s) => ({ showBrows: !s.showBrows })),
+  toggleBrowMapping: () => set((s) => ({ showBrowMapping: !s.showBrowMapping })),
 }))

@@ -10,12 +10,15 @@ has never had.
 
 ## Status
 
-Phases 1-3 of 6 complete: procedural stand-in head with all nine anatomy
+Phases 1-4 of 6 complete: procedural stand-in head with all nine anatomy
 sliders, one-click front/profile cameras, procedural natural lashes and
 extensions with real curl-family geometry (B/C/CC/D/L/M), the zone-based
 map editor with classic preset maps, and the fit test - real-geometry
 collision (red/amber), straight-ahead occlusion (ghosted), and side-by-side
-comparison of one design on two faces. See `MESH_SPEC.md` for what the
+comparison of one design on two faces - plus procedural brow hair
+(density, caliber, growth direction, position, fullness) and the live
+brow-mapping overlay: the three lines from the nostril edge through the
+inner corner, pupil, and outer corner, recomputed as the anatomy changes. See `MESH_SPEC.md` for what the
 future sculpted head must provide.
 
 ## Principles

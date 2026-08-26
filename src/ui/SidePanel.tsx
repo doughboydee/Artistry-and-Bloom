@@ -1,4 +1,5 @@
 import { AnatomySliders } from './AnatomySliders'
+import { BrowPanel } from './BrowPanel'
 import { FitTestPanel } from './FitTestPanel'
 import { LashDesignPanel } from './LashDesignPanel'
 import { ViewBar } from './ViewBar'
@@ -57,6 +58,7 @@ export function SidePanel() {
       <AnatomySliders faceId={compareMode ? activeFace : 'A'} />
       <FitTestPanel />
       <LashDesignPanel />
+      <BrowPanel />
       <ViewBar />
     </aside>
   )

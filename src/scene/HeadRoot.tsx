@@ -4,7 +4,9 @@ import { BufferAttribute, BufferGeometry } from 'three'
 import { ProceduralHead } from '../head/procedural/ProceduralHead'
 import { SkinBVH } from '../fit/skinBvh'
 import { useAppStore, type FaceId } from '../state/store'
+import { BrowSet } from './BrowSet'
 import { LashSet } from './LashSet'
+import { MappingLines } from './MappingLines'
 
 /**
  * Owns the HeadModel instance for one face and keeps it in sync with the
@@ -68,6 +70,9 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
       )}
       <LashSet head={head} bvh={bvh} faceId={faceId} eye="left" />
       <LashSet head={head} bvh={bvh} faceId={faceId} eye="right" />
+      <BrowSet head={head} faceId={faceId} eye="left" />
+      <BrowSet head={head} faceId={faceId} eye="right" />
+      <MappingLines head={head} faceId={faceId} />
     </group>
   )
 }
