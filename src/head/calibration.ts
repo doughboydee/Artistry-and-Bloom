@@ -32,6 +32,8 @@ export interface Calibration {
   globeRadiusMm: number
   /** Lid tissue thickness over the globe, mm. */
   lidThicknessMm: number
+  /** Globe-center Z at neutral eye depth (relative to face origin), mm. */
+  globeBaseZMm: number
   /** World Y of eye level (origin is at eye level, so 0). */
   eyeLevelY: number
 }
@@ -48,6 +50,7 @@ export const CALIBRATION: Calibration = {
   noseBaseWidthMm: [28, 42],
   globeRadiusMm: 12,
   lidThicknessMm: 1.5,
+  globeBaseZMm: -3,
   eyeLevelY: 0,
 }
 
@@ -68,6 +71,7 @@ export interface ResolvedAnatomy {
   noseBaseWidthMm: number
   globeRadiusMm: number
   lidThicknessMm: number
+  globeCenterZMm: number
 }
 
 export function resolveAnatomy(p: AnatomyParams, c: Calibration = CALIBRATION): ResolvedAnatomy {
@@ -83,5 +87,6 @@ export function resolveAnatomy(p: AnatomyParams, c: Calibration = CALIBRATION): 
     noseBaseWidthMm: fromRange(c.noseBaseWidthMm, p.noseBaseWidth),
     globeRadiusMm: c.globeRadiusMm,
     lidThicknessMm: c.lidThicknessMm,
+    globeCenterZMm: c.globeBaseZMm + fromRange(c.eyeDepthOffsetMm, p.eyeDepth),
   }
 }

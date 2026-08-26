@@ -1,30 +1,20 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { FaceScene } from './scene/FaceScene'
+import { CameraRig } from './scene/CameraRig'
+import { SidePanel } from './ui/SidePanel'
 
-// Placeholder scene: proves the toolchain and deploy pipeline end-to-end.
-// Replaced by the anatomy trainer scene in the next increment.
 export default function App() {
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <Canvas camera={{ position: [0, 0, 120], near: 1, far: 2000 }}>
-        <hemisphereLight intensity={0.5} />
-        <directionalLight position={[100, 100, 100]} intensity={1.5} />
-        <mesh>
-          <sphereGeometry args={[30, 48, 32]} />
-          <meshStandardMaterial color="#b0a8a0" roughness={0.8} />
-        </mesh>
-        <OrbitControls />
-      </Canvas>
-      <div
-        style={{
-          position: 'absolute',
-          top: 12,
-          left: 16,
-          fontSize: 14,
-          opacity: 0.8,
-        }}
-      >
-        Lash &amp; Brow Anatomy Trainer — pipeline check
+    <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+      <SidePanel />
+      <div style={{ flex: 1, position: 'relative' }}>
+        <Canvas
+          frameloop="demand"
+          camera={{ position: [180, 60, 360], near: 1, far: 2000 }}
+        >
+          <FaceScene faceId="A" />
+          <CameraRig />
+        </Canvas>
       </div>
     </div>
   )
