@@ -12,7 +12,7 @@ export function BrowSet({ head, faceId, eye }: { head: HeadModel; faceId: FaceId
   const invalidate = useThree((s) => s.invalidate)
 
   const set = useMemo(() => {
-    return buildBrowHairs(head.getBrowRegion(eye), eye, browParams)
+    return buildBrowHairs(head.getBrowRegion(eye), eye, browParams, faceParams.age)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [head, eye, browParams, faceParams])
 

@@ -173,8 +173,11 @@ export function buildTubeGeometryFor(
           next.z - polylines[base + j0 * 3 + 2]!,
         )
         .normalize()
-      side.crossVectors(dir, UP_HINT).normalize()
-      if (side.lengthSq() < 0.5) side.set(1, 0, 0)
+      side.crossVectors(dir, UP_HINT)
+      // Check BEFORE normalizing: a near-parallel dir gives a tiny cross
+      // product whose normalized direction is numerically unstable.
+      if (side.lengthSq() < 1e-4) side.set(1, 0, 0)
+      else side.normalize()
       up.crossVectors(side, dir)
 
       // Taper: full diameter at the base → 30% at the tip.

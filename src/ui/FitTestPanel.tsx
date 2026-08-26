@@ -11,7 +11,10 @@ function EyeSummaryLine({ face, eye }: { face: FaceId; eye: 'left' | 'right' }) 
   const text = parts.length > 0 ? parts.join(', ') : 'all clear'
   return (
     <div style={{ fontSize: 11, marginTop: 3, opacity: parts.length > 0 ? 0.9 : 0.55 }}>
-      <span style={{ opacity: 0.6 }}>{eye === 'left' ? 'Left' : 'Right'} eye:</span>{' '}
+      {/* "Left" is the SUBJECT's left, which is screen-right in front view. */}
+      <span style={{ opacity: 0.6 }}>
+        {eye === 'left' ? 'Left eye (screen right):' : 'Right eye (screen left):'}
+      </span>{' '}
       {text}
       <span style={{ opacity: 0.5 }}> — of {summary.total}</span>
     </div>

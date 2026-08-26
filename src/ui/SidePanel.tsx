@@ -4,7 +4,7 @@ import { FitTestPanel } from './FitTestPanel'
 import { InstructorPanel } from './InstructorPanel'
 import { LashDesignPanel } from './LashDesignPanel'
 import { ViewBar } from './ViewBar'
-import { loadHeadFromFile } from '../head/headSource'
+import { BUILT_IN_NAME, clearLoadedHead, loadHeadFromFile } from '../head/headSource'
 import { useAppStore, type FaceId } from '../state/store'
 
 function FaceTabs() {
@@ -74,7 +74,14 @@ export function SidePanel() {
       <FitTestPanel />
       <LashDesignPanel />
       <BrowPanel />
-      <InstructorPanel onLoadHeadFile={onLoadHeadFile} headSource={headSourceName} />
+      <InstructorPanel
+        onLoadHeadFile={onLoadHeadFile}
+        onUseBuiltIn={() => {
+          clearLoadedHead()
+          setHeadSourceName(BUILT_IN_NAME)
+        }}
+        headSource={headSourceName}
+      />
       <ViewBar />
     </aside>
   )

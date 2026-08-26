@@ -31,7 +31,7 @@ import {
   shellNormalAt,
   browArchY,
   eyeCenterX,
-  insideEyeHole,
+  insideEyeHoleFor,
 } from './shell'
 import {
   ORBITAL_RINGS,
@@ -168,7 +168,7 @@ export class ProceduralHead implements HeadModel {
     for (let j = 0; j < SHELL_ROWS; j++) {
       for (let i = 0; i < SHELL_COLS; i++) {
         const raw = shellGridXY(i, j)
-        if (!insideEyeHole(raw.x, raw.y)) continue
+        if (!insideEyeHoleFor(raw.x, raw.y, a)) continue
         const vi = j * SHELL_COLS + i
         const n = shellNormalAt(parr[vi * 3]!, parr[vi * 3 + 1]!, a)
         narr[vi * 3] = n.x

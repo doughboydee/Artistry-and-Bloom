@@ -12,11 +12,21 @@ export default function App() {
   const applyScenario = useAppStore((s) => s.applyScenario)
 
   // A share link carries the whole scenario in the URL hash: #s=...
+  // Handled on load AND on hash change (a link pasted into an already-open
+  // tab). The hash is dropped once applied: otherwise a later page reload
+  // would silently snap back to the link's setup, erasing everything the
+  // user changed since opening it.
   useEffect(() => {
-    const match = /#s=([A-Za-z0-9_-]+)/.exec(location.hash)
-    if (!match) return
-    const scenario = decodeScenarioFromHash(match[1]!)
-    if (scenario) applyScenario(scenario)
+    const applyFromHash = () => {
+      const match = /#s=([A-Za-z0-9_-]+)/.exec(location.hash)
+      if (!match) return
+      const scenario = decodeScenarioFromHash(match[1]!)
+      if (scenario) applyScenario(scenario)
+      history.replaceState(null, '', location.pathname + location.search)
+    }
+    applyFromHash()
+    window.addEventListener('hashchange', applyFromHash)
+    return () => window.removeEventListener('hashchange', applyFromHash)
   }, [applyScenario])
   const containerRef = useRef<HTMLDivElement>(null!)
   const viewARef = useRef<HTMLDivElement>(null!)
@@ -45,6 +55,7 @@ export default function App() {
         </div>
         <Canvas
           eventSource={containerRef}
+          frameloop="demand"
           camera={{ position: [140, 50, 280], near: 1, far: 2000 }}
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
         >

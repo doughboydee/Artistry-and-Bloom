@@ -152,7 +152,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
       },
     })),
 
-  setCompareMode: (on) => set({ compareMode: on }),
+  setCompareMode: (on) =>
+    set((s) =>
+      on
+        ? { compareMode: true }
+        : // Face B's fit summary is meaningless once its view is gone.
+          { compareMode: false, fitResults: { A: s.fitResults.A } },
+    ),
   setActiveFace: (face) => set({ activeFace: face }),
 
   browParams: { ...DEFAULT_BROW_PARAMS },
@@ -183,6 +189,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   applyScenario: (scenario) =>
     set({
+      // Old fit summaries describe the previous setup — drop them so panels
+      // never show stale numbers while the new fit is computed.
+      fitResults: {},
       faces: JSON.parse(JSON.stringify(scenario.faces)),
       lashDesign: JSON.parse(JSON.stringify(scenario.lashDesign)),
       naturalLashes: { ...scenario.naturalLashes },

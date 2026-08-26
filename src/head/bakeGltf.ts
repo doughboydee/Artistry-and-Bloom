@@ -204,5 +204,7 @@ export async function downloadBakedGlb(): Promise<void> {
   link.href = url
   link.download = 'anatomy-trainer-head.glb'
   link.click()
-  URL.revokeObjectURL(url)
+  // Deferred: revoking synchronously can race the download start in some
+  // browsers and abort it.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }

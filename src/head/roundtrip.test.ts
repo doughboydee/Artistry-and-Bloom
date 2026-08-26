@@ -66,6 +66,34 @@ describe('Blender bridge round trip (export → load)', () => {
     }
   }, 30000)
 
+  it('bakes node transforms into world space (transformed Blender exports)', async () => {
+    const plain = new GltfMorphHead(await loadBaked(), NEUTRAL_PARAMS)
+
+    // A sculptor's file often wraps everything in a transformed parent node
+    // (unit scale, axis conversion). All queries must agree on world space.
+    const { Group: G } = await import('three')
+    const wrapper = new G()
+    const inner = await loadBaked()
+    inner.position.set(5, -3, 2)
+    wrapper.add(inner)
+    const transformed = new GltfMorphHead(wrapper, NEUTRAL_PARAMS)
+
+    const a = plain.getLashLine('left', 10)
+    const b = transformed.getLashLine('left', 10)
+    for (let i = 0; i < 10; i++) {
+      expect(b[i]!.position.x).toBeCloseTo(a[i]!.position.x + 5, 3)
+      expect(b[i]!.position.y).toBeCloseTo(a[i]!.position.y - 3, 3)
+      expect(b[i]!.position.z).toBeCloseTo(a[i]!.position.z + 2, 3)
+    }
+    // Skin vertices (what the fit test reads) carry the same offset.
+    const pa = plain.skinMesh.geometry.getAttribute('position')
+    const pb = transformed.skinMesh.geometry.getAttribute('position')
+    expect(pb.getX(0)).toBeCloseTo(pa.getX(0) + 5, 3)
+    expect(pb.getY(0)).toBeCloseTo(pa.getY(0) - 3, 3)
+    // And the rendered node no longer double-applies the transform.
+    expect(transformed.skinMesh.position.length()).toBeLessThan(1e-6)
+  }, 30000)
+
   it('produces an equivalent fit-test verdict on the loaded head', async () => {
     const scene = await loadBaked()
     // Compare at a morph ENDPOINT (hooding = 1): between endpoints a linear

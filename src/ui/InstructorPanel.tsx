@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { downloadBakedGlb } from '../head/bakeGltf'
+import { BUILT_IN_NAME } from '../head/headSource'
 import {
   builtInScenarios,
   encodeScenarioToHash,
@@ -21,9 +22,11 @@ const buttonStyle: React.CSSProperties = {
 
 export function InstructorPanel({
   onLoadHeadFile,
+  onUseBuiltIn,
   headSource,
 }: {
   onLoadHeadFile: (file: File) => void
+  onUseBuiltIn: () => void
   headSource: string
 }) {
   const snapshotScenario = useAppStore((s) => s.snapshotScenario)
@@ -34,9 +37,12 @@ export function InstructorPanel({
   const [showAdvanced, setShowAdvanced] = useState(false)
   const builtIns = useMemo(() => builtInScenarios(), [])
 
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => () => clearTimeout(flashTimer.current), [])
   const flash = (msg: string) => {
     setNotice(msg)
-    setTimeout(() => setNotice(''), 3000)
+    clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => setNotice(''), 3000)
   }
 
   const save = () => {
@@ -169,6 +175,14 @@ export function InstructorPanel({
               }}
             />
           </label>
+          {headSource !== BUILT_IN_NAME && (
+            <button
+              onClick={onUseBuiltIn}
+              style={{ ...buttonStyle, display: 'block', width: '100%', marginTop: 8 }}
+            >
+              Return to built-in head
+            </button>
+          )}
         </div>
       )}
 

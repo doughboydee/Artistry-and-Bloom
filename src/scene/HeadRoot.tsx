@@ -25,23 +25,29 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
   const headSourceName = useAppStore((s) => s.headSourceName)
   const setHeadSourceName = useAppStore((s) => s.setHeadSourceName)
 
-  const head: HeadModel = useMemo(() => {
+  const { head, loadFailed } = useMemo((): { head: HeadModel; loadFailed: boolean } => {
     const scene = getLoadedHeadScene()
     if (scene && headSourceName !== BUILT_IN_NAME) {
       try {
         // Each face gets its own node tree; GltfMorphHead deep-copies the
         // geometries it mutates.
-        return new GltfMorphHead(scene.clone(true), params)
+        return { head: new GltfMorphHead(scene.clone(true), params), loadFailed: false }
       } catch (err) {
         console.error('Loaded head rejected, falling back to stand-in:', err)
-        setHeadSourceName(BUILT_IN_NAME)
+        return { head: new ProceduralHead(params), loadFailed: true }
       }
     }
-    return new ProceduralHead(params)
+    return { head: new ProceduralHead(params), loadFailed: false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headSourceName])
   const bvh = useMemo(() => new SkinBVH(head), [head])
   useEffect(() => () => head.dispose(), [head])
+
+  // Store writes belong in effects, never in the render phase: if the loaded
+  // file was rejected, flip the source label back to the built-in head here.
+  useEffect(() => {
+    if (loadFailed) setHeadSourceName(BUILT_IN_NAME)
+  }, [loadFailed, setHeadSourceName])
 
   // Apply parameters during render (before children render) so LashSet reads
   // the lash line from the already-updated head. Idempotent, so React's

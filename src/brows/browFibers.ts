@@ -34,7 +34,12 @@ function makeRng(seed: number): () => number {
   }
 }
 
-export function buildBrowHairs(region: BrowRegionFn, eye: Eye, params: BrowParams): FiberSet {
+export function buildBrowHairs(
+  region: BrowRegionFn,
+  eye: Eye,
+  params: BrowParams,
+  age = 0,
+): FiberSet {
   const rng = makeRng(eye === 'left' ? 24601 : 10642)
   const count = browHairCount(params.density)
   const bandWidth = browBandWidthMm(params.fullness)
@@ -48,8 +53,14 @@ export function buildBrowHairs(region: BrowRegionFn, eye: Eye, params: BrowParam
   const heading = new Vector3()
   const lift = new Vector3()
 
-  for (let f = 0; f < count; f++) {
+  let f = 0
+  for (let n = 0; n < count; n++) {
     const u = Math.min(0.995, Math.max(0.005, rng() ** 0.85))
+    // Brows thin with age too — most visibly through the tail. The keep-roll
+    // is always drawn so the surviving hairs stay in the same places as the
+    // age slider moves.
+    const keepRoll = rng()
+    if (keepRoll < age * (0.12 + 0.5 * u)) continue
     // Center-weighted across the band; the band thins toward the tail.
     const taper = 1 - 0.55 * u
     const vSpread = (rng() + rng() - 1) * 0.5 // triangular, -0.5..0.5
@@ -78,7 +89,7 @@ export function buildBrowHairs(region: BrowRegionFn, eye: Eye, params: BrowParam
       .addScaledVector(du, Math.sin(angleFromUp))
       .normalize()
 
-    const lengthMm = (7 - 2.5 * u) * (1 + 0.2 * (rng() * 2 - 1))
+    const lengthMm = (7 - 2.5 * u) * (1 + 0.2 * (rng() * 2 - 1)) * (1 - 0.15 * age)
     const pts2d = curlPolyline('B', lengthMm, FIBER_STEPS)
     const o = f * RINGS * 3
     for (let i = 0; i < RINGS; i++) {
@@ -91,15 +102,21 @@ export function buildBrowHairs(region: BrowRegionFn, eye: Eye, params: BrowParam
       polylines[o + i * 3 + 2] = base.position.z + dir.z * p2.x + lift.z * lx + n.z * 0.15
     }
     anchorT[f] = u
-    baseDiameters[f] = browHairDiameterMm(params.caliber) * 3 // render-exaggerated like lashes
+    // Render-exaggerated like lashes; hairs also become finer with age.
+    baseDiameters[f] = browHairDiameterMm(params.caliber) * 3 * (1 - 0.25 * age)
+    f++
   }
 
-  const allIndices = Array.from({ length: count }, (_, i) => i)
+  const kept = f
+  const keptPolylines = polylines.slice(0, kept * RINGS * 3)
+  const keptAnchorT = anchorT.slice(0, kept)
+  const keptDiameters = baseDiameters.slice(0, kept)
+  const allIndices = Array.from({ length: kept }, (_, i) => i)
   return {
-    geometry: buildTubeGeometryFor(polylines, allIndices, baseDiameters),
-    polylines,
-    fiberCount: count,
-    anchorT,
-    baseDiameters,
+    geometry: buildTubeGeometryFor(keptPolylines, allIndices, keptDiameters),
+    polylines: keptPolylines,
+    fiberCount: kept,
+    anchorT: keptAnchorT,
+    baseDiameters: keptDiameters,
   }
 }

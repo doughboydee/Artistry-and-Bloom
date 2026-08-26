@@ -5,9 +5,9 @@ import { computeEyeFrame, marginPoint, eyeSign } from './margins'
 import {
   shellZAt,
   eyeCenterX,
+  eyeHoleRx,
   warpX,
   NEUTRAL_EYE_X,
-  EYE_HOLE_RX,
   EYE_HOLE_RY,
   EYE_HOLE_CY,
 } from './shell'
@@ -168,7 +168,7 @@ export function writeOrbitalPositions(
       dx /= dLen
       dy /= dLen
     }
-    const rimR = 1 / Math.sqrt((dx / EYE_HOLE_RX) ** 2 + (dy / EYE_HOLE_RY) ** 2)
+    const rimR = 1 / Math.sqrt((dx / eyeHoleRx(a)) ** 2 + (dy / EYE_HOLE_RY) ** 2)
     const sign = eyeSign(eye)
     const rimXNeutral = sign * NEUTRAL_EYE_X + dx * rimR
     const rimYNeutral = EYE_HOLE_CY + dy * rimR

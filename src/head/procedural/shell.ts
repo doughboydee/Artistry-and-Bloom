@@ -165,19 +165,37 @@ export function shellGridXY(i: number, j: number): { x: number; y: number } {
   return { x: d.x * HALF_W, y: CENTER_Y + d.y * HALF_H }
 }
 
-/** Squared normalized ellipse distance to a hole (<1 means inside). */
-const eyeHoleMetric = (x: number, y: number, sign: number): number =>
-  ((x - sign * NEUTRAL_EYE_X) / EYE_HOLE_RX) ** 2 + ((y - EYE_HOLE_CY) / EYE_HOLE_RY) ** 2
+/**
+ * Eye-hole ellipse half-width for the current anatomy. The neutral hole is
+ * sized for the neutral fissure; long + wide-set eyes push the outer corner
+ * toward the rim, so the hole grows just enough to always keep ~4mm of lid
+ * run beyond the corner. It can only grow (never shrink below the carved
+ * topology's hole), so the fixed index buffer stays valid: cells newly
+ * swallowed by a larger hole collapse to zero-area slivers on the boundary.
+ */
+export const eyeHoleRx = (a: ResolvedAnatomy): number =>
+  Math.max(EYE_HOLE_RX, eyeCenterX(a) + a.eyeLengthMm / 2 + 4 - NEUTRAL_EYE_X)
 
+/** Squared normalized ellipse distance to a hole (<1 means inside). */
+const eyeHoleMetric = (x: number, y: number, sign: number, rx: number): number =>
+  ((x - sign * NEUTRAL_EYE_X) / rx) ** 2 + ((y - EYE_HOLE_CY) / EYE_HOLE_RY) ** 2
+
+/** Neutral-hole test — used for the FIXED topology (cell dropping). */
 export const insideEyeHole = (x: number, y: number): boolean =>
-  eyeHoleMetric(x, y, 1) < 1 || eyeHoleMetric(x, y, -1) < 1
+  eyeHoleMetric(x, y, 1, EYE_HOLE_RX) < 1 || eyeHoleMetric(x, y, -1, EYE_HOLE_RX) < 1
+
+/** Current-hole test — matches where writeShellPositions actually snaps. */
+export const insideEyeHoleFor = (x: number, y: number, a: ResolvedAnatomy): boolean => {
+  const rx = eyeHoleRx(a)
+  return eyeHoleMetric(x, y, 1, rx) < 1 || eyeHoleMetric(x, y, -1, rx) < 1
+}
 
 /** Snap a neutral-space point that falls inside a hole onto its boundary. */
-function snapToEyeHoleBoundary(x: number, y: number): { x: number; y: number } {
+function snapToEyeHoleBoundary(x: number, y: number, rx: number): { x: number; y: number } {
   for (const sign of [1, -1]) {
-    const e = eyeHoleMetric(x, y, sign)
+    const e = eyeHoleMetric(x, y, sign, rx)
     if (e < 1) {
-      if (e < 1e-9) return { x: sign * NEUTRAL_EYE_X + EYE_HOLE_RX, y: EYE_HOLE_CY }
+      if (e < 1e-9) return { x: sign * NEUTRAL_EYE_X + rx, y: EYE_HOLE_CY }
       const k = 1 / Math.sqrt(e)
       return {
         x: sign * NEUTRAL_EYE_X + (x - sign * NEUTRAL_EYE_X) * k,
@@ -231,11 +249,12 @@ export const SHELL_VERTEX_COUNT = SHELL_COLS * SHELL_ROWS
  * `base` (3 floats per vertex, row-major grid order).
  */
 export function writeShellPositions(out: Float32Array, base: number, a: ResolvedAnatomy): void {
+  const rx = eyeHoleRx(a)
   let k = base
   for (let j = 0; j < SHELL_ROWS; j++) {
     for (let i = 0; i < SHELL_COLS; i++) {
       const raw = shellGridXY(i, j)
-      const p = snapToEyeHoleBoundary(raw.x, raw.y)
+      const p = snapToEyeHoleBoundary(raw.x, raw.y, rx)
       const x = warpX(p.x, p.y, a)
       out[k++] = x
       out[k++] = p.y

@@ -3,6 +3,7 @@ import {
   BufferGeometry,
   Group,
   Line,
+  Matrix3,
   Mesh,
   Object3D,
   Vector3,
@@ -42,15 +43,29 @@ export class GltfMorphHead implements HeadModel {
   private readonly eyeSpheres: Record<Eye, { node: Object3D; basePos: Vector3 } | null>
 
   constructor(root: Group, initial: AnatomyParams) {
+    // Blender exports routinely carry node transforms (unit scale, axis
+    // conversion). Rendering detaches nodes from their glTF parents and the
+    // fit test reads raw vertex data, so every transform is baked into the
+    // geometry up front — afterwards, world space and vertex space agree.
+    root.updateMatrixWorld(true)
+
     const skin = root.getObjectByName('skin')
     if (!(skin instanceof Mesh)) throw new Error('MESH_SPEC: object named "skin" not found')
     this.skinMesh = skin
     // Node clones share geometry; this instance mutates positions, so own a copy.
     skin.geometry = (skin.geometry as BufferGeometry).clone()
     const geometry = skin.geometry as BufferGeometry
+    geometry.applyMatrix4(skin.matrixWorld)
+    const skinLinear = new Matrix3().setFromMatrix4(skin.matrixWorld)
     const pos = geometry.getAttribute('position') as BufferAttribute
     this.skinBase = new Float32Array(pos.array as Float32Array)
     this.skinMorphs = readMorphs(skin)
+    // Morph deltas are directions, not points: rotate/scale them, no shift.
+    for (const deltas of this.skinMorphs.values()) transformDeltas(deltas, skinLinear)
+    skin.position.set(0, 0, 0)
+    skin.quaternion.identity()
+    skin.scale.set(1, 1, 1)
+    skin.updateMatrix()
 
     this.lashLines = {
       left: readLine(root, 'lashLine_L'),
@@ -75,7 +90,12 @@ export class GltfMorphHead implements HeadModel {
 
     const sphere = (name: string) => {
       const node = root.getObjectByName(name)
-      return node ? { node, basePos: node.position.clone() } : null
+      if (!node) return null
+      // Rendered detached from its glTF parents, so its local position must
+      // be its world position.
+      const world = node.getWorldPosition(new Vector3())
+      node.position.copy(world)
+      return { node, basePos: world.clone() }
     }
     this.eyeSpheres = { left: sphere('eye_L'), right: sphere('eye_R') }
     this.auxMeshes = [this.eyeSpheres.left?.node, this.eyeSpheres.right?.node].filter(
@@ -191,6 +211,17 @@ export class GltfMorphHead implements HeadModel {
 
 /* ------------------------------------------------------------------ */
 
+/** Apply the rotation/scale part of a transform to packed xyz deltas. */
+function transformDeltas(deltas: Float32Array, m: Matrix3): void {
+  const v = new Vector3()
+  for (let i = 0; i < deltas.length; i += 3) {
+    v.set(deltas[i]!, deltas[i + 1]!, deltas[i + 2]!).applyMatrix3(m)
+    deltas[i] = v.x
+    deltas[i + 1] = v.y
+    deltas[i + 2] = v.z
+  }
+}
+
 function readMorphs(obj: Mesh | Line): Map<string, Float32Array> {
   const geometry = obj.geometry as BufferGeometry
   const morphs = new Map<string, Float32Array>()
@@ -228,6 +259,16 @@ class MorphedLine {
     const pos = (line.geometry as BufferGeometry).getAttribute('position') as BufferAttribute
     this.base = new Float32Array(pos.array as Float32Array)
     this.morphs = readMorphs(line)
+    // Bake the line node's world transform (see the constructor note).
+    const v = new Vector3()
+    for (let i = 0; i < this.base.length; i += 3) {
+      v.set(this.base[i]!, this.base[i + 1]!, this.base[i + 2]!).applyMatrix4(line.matrixWorld)
+      this.base[i] = v.x
+      this.base[i + 1] = v.y
+      this.base[i + 2] = v.z
+    }
+    const linear = new Matrix3().setFromMatrix4(line.matrixWorld)
+    for (const deltas of this.morphs.values()) transformDeltas(deltas, linear)
     this.current = new Float32Array(this.base)
   }
 

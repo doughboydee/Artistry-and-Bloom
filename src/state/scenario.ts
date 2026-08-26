@@ -33,29 +33,88 @@ export function decodeScenarioFromHash(hash: string): Scenario | null {
   try {
     const b64 = hash.replace(/-/g, '+').replace(/_/g, '/')
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
-    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Partial<Scenario>
-    if (parsed.v !== 1 || !parsed.faces || !parsed.lashDesign) return null
-    // Fill any missing fields with defaults so older links stay loadable.
-    return {
-      v: 1,
-      faces: {
-        A: { ...NEUTRAL_PARAMS, ...parsed.faces.A },
-        B: { ...NEUTRAL_PARAMS, ...parsed.faces.B },
-      },
-      lashDesign: parsed.lashDesign ?? DEFAULT_DESIGN,
-      naturalLashes: { ...DEFAULT_NATURAL_LASHES, ...parsed.naturalLashes },
-      browParams: { ...DEFAULT_BROW_PARAMS, ...parsed.browParams },
-      fitSettings: {
-        enabled: true,
-        safetyMarginMm: 0.5,
-        ghostThreshold: 0.5,
-        showGhosts: true,
-        ...parsed.fitSettings,
-      },
-      compareMode: parsed.compareMode ?? false,
-    }
+    return sanitizeScenario(JSON.parse(new TextDecoder().decode(bytes)))
   } catch {
     return null
+  }
+}
+
+// A share link or saved file is user-editable text, so nothing in it can be
+// trusted: every field is checked, clamped to its legal range, or replaced
+// with a sane default. A link can be wrong, but it can never break the app.
+const clampNum = (v: unknown, fallback: number, min: number, max: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback
+
+const VALID_CURLS = new Set(['B', 'C', 'CC', 'D', 'L', 'M'])
+
+function sanitizeFace(raw: unknown): AnatomyParams {
+  const src = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>
+  const out = { ...NEUTRAL_PARAMS }
+  for (const key of Object.keys(NEUTRAL_PARAMS) as (keyof AnatomyParams)[]) {
+    out[key] = clampNum(src[key], NEUTRAL_PARAMS[key], 0, 1)
+  }
+  return out
+}
+
+function sanitizeLashDesign(raw: unknown): LashDesign {
+  const zonesRaw = (raw as { zones?: unknown } | null)?.zones
+  if (!Array.isArray(zonesRaw) || zonesRaw.length === 0) {
+    return JSON.parse(JSON.stringify(DEFAULT_DESIGN)) as LashDesign
+  }
+  return {
+    zones: zonesRaw.slice(0, 9).map((z) => {
+      const zz = (typeof z === 'object' && z !== null ? z : {}) as Record<string, unknown>
+      return {
+        lengthMm: clampNum(zz.lengthMm, 10, 4, 20),
+        curl: (VALID_CURLS.has(zz.curl as string) ? zz.curl : 'C') as LashDesign['zones'][number]['curl'],
+        diameterMm: clampNum(zz.diameterMm, 0.15, 0.03, 0.3),
+      }
+    }),
+  }
+}
+
+export function sanitizeScenario(parsed: unknown): Scenario | null {
+  if (typeof parsed !== 'object' || parsed === null) return null
+  const p = parsed as Record<string, unknown>
+  if (p.v !== 1) return null
+  const faces = (typeof p.faces === 'object' && p.faces !== null ? p.faces : {}) as Record<
+    string,
+    unknown
+  >
+  const nat = (typeof p.naturalLashes === 'object' && p.naturalLashes !== null
+    ? p.naturalLashes
+    : {}) as Record<string, unknown>
+  const brow = (typeof p.browParams === 'object' && p.browParams !== null
+    ? p.browParams
+    : {}) as Record<string, unknown>
+  const fit = (typeof p.fitSettings === 'object' && p.fitSettings !== null
+    ? p.fitSettings
+    : {}) as Record<string, unknown>
+  return {
+    v: 1,
+    faces: { A: sanitizeFace(faces.A), B: sanitizeFace(faces.B) },
+    lashDesign: sanitizeLashDesign(p.lashDesign),
+    naturalLashes: {
+      growthDirection: clampNum(nat.growthDirection, DEFAULT_NATURAL_LASHES.growthDirection, 0, 1),
+      density: clampNum(nat.density, DEFAULT_NATURAL_LASHES.density, 0, 1),
+      lengthMm: clampNum(nat.lengthMm, DEFAULT_NATURAL_LASHES.lengthMm, 2, 15),
+      thickness: clampNum(nat.thickness, DEFAULT_NATURAL_LASHES.thickness, 0, 1),
+      curl: clampNum(nat.curl, DEFAULT_NATURAL_LASHES.curl, 0, 1),
+    },
+    browParams: {
+      density: clampNum(brow.density, DEFAULT_BROW_PARAMS.density, 0, 1),
+      caliber: clampNum(brow.caliber, DEFAULT_BROW_PARAMS.caliber, 0, 1),
+      growthDirection: clampNum(brow.growthDirection, DEFAULT_BROW_PARAMS.growthDirection, 0, 1),
+      verticalOffset: clampNum(brow.verticalOffset, DEFAULT_BROW_PARAMS.verticalOffset, 0, 1),
+      fullness: clampNum(brow.fullness, DEFAULT_BROW_PARAMS.fullness, 0, 1),
+    },
+    fitSettings: {
+      enabled: typeof fit.enabled === 'boolean' ? fit.enabled : true,
+      safetyMarginMm: clampNum(fit.safetyMarginMm, 0.5, 0, 2),
+      ghostThreshold: clampNum(fit.ghostThreshold, 0.5, 0, 1),
+      showGhosts: typeof fit.showGhosts === 'boolean' ? fit.showGhosts : true,
+    },
+    compareMode: p.compareMode === true,
   }
 }
 
@@ -69,7 +128,22 @@ export interface SavedScenario {
 export function loadSavedScenarios(): SavedScenario[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as SavedScenario[]) : []
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    // Same rule as share links: stored data is untrusted. Drop entries that
+    // can't be repaired rather than letting one bad row break the panel.
+    const out: SavedScenario[] = []
+    for (const entry of parsed) {
+      const e = (typeof entry === 'object' && entry !== null ? entry : {}) as Record<
+        string,
+        unknown
+      >
+      if (typeof e.name !== 'string' || !e.name.trim()) continue
+      const scenario = sanitizeScenario(e.scenario)
+      if (scenario) out.push({ name: e.name.slice(0, 120), scenario })
+    }
+    return out
   } catch {
     return []
   }

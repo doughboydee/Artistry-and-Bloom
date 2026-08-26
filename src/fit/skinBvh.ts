@@ -13,6 +13,7 @@ import type { HeadModel } from '../head/HeadModel'
  */
 export class SkinBVH {
   private bvh: MeshBVH | null = null
+  private builtFor: BufferGeometry | null = null
   private builtAtVersion = -1
   private readonly head: HeadModel
 
@@ -21,11 +22,16 @@ export class SkinBVH {
   }
 
   private ensure(): MeshBVH {
-    if (!this.bvh || this.builtAtVersion !== this.head.version) {
-      const geometry = this.head.skinMesh.geometry as BufferGeometry
+    const geometry = this.head.skinMesh.geometry as BufferGeometry
+    if (!this.bvh || this.builtFor !== geometry) {
       this.bvh = new MeshBVH(geometry)
-      this.builtAtVersion = this.head.version
+      this.builtFor = geometry
+    } else if (this.builtAtVersion !== this.head.version) {
+      // Topology is fixed — only vertex positions move — so updating the
+      // existing tree's bounds is much cheaper than rebuilding it.
+      this.bvh.refit()
     }
+    this.builtAtVersion = this.head.version
     return this.bvh
   }
 
