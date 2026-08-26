@@ -28,7 +28,14 @@ import {
  */
 
 export const ORBITAL_SECTORS = 64 // around the fissure (must be even)
-export const ORBITAL_RINGS = 12 // radial subdivisions margin → rim
+export const ORBITAL_RINGS = 18 // radial subdivisions margin → rim
+/**
+ * Ring index pinned EXACTLY to the crease distance on every spoke. Because
+ * the crease is a designated edge loop rather than falling between uniform
+ * steps at a different fraction per spoke, the crease renders as one smooth
+ * continuous line and glides smoothly as the slider moves.
+ */
+export const S_CREASE = 6
 export const ORBITAL_VERTEX_COUNT = ORBITAL_SECTORS * (ORBITAL_RINGS + 1)
 
 const HALF = ORBITAL_SECTORS / 2
@@ -163,14 +170,23 @@ export function writeOrbitalPositions(
 
     const D = Math.max(1e-3, W.distanceTo(M))
     // Crease depth tapers to the lower-lid value at the corners so adjacent
-    // spokes across the canthi agree (no folds).
+    // spokes across the canthi agree (no folds); it can never exceed most of
+    // the spoke's total run.
     const corner = smoothstep(0, 0.18, t) * (1 - smoothstep(0.82, 1, t))
-    const creaseD = lid === 'upper' ? 3 + (a.creaseHeightMm - 3) * corner : 3
+    const creaseD = Math.min(
+      0.7 * D,
+      lid === 'upper' ? 3 + (a.creaseHeightMm - 3) * corner : 3,
+    )
 
     dir0.copy(M).sub(G).normalize()
 
     for (let s = 0; s <= ORBITAL_RINGS; s++) {
-      const d = (s / ORBITAL_RINGS) * D
+      // Crease-aligned parameterization: rings 0..S_CREASE span the tarsal
+      // lid (margin → crease), rings S_CREASE..RINGS span crease → rim.
+      const d =
+        s <= S_CREASE
+          ? (s / S_CREASE) * creaseD
+          : creaseD + ((s - S_CREASE) / (ORBITAL_RINGS - S_CREASE)) * (D - creaseD)
 
       // Globe-hugging reference (clamped just past the crease so it never
       // wraps around the back of the sphere).
