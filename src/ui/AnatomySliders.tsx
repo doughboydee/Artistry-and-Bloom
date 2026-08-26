@@ -71,6 +71,29 @@ export function AnatomySliders({ faceId }: { faceId: FaceId }) {
           </div>
         </label>
       ))}
+
+      <div style={{ borderTop: '1px solid #33363d', marginTop: 16, paddingTop: 10 }}>
+        <label style={{ display: 'block' }}>
+          <div style={{ fontSize: 13, marginBottom: 4 }}>Age</div>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={params.age}
+            onChange={(e) => setFaceParam(faceId, 'age', Number(e.target.value))}
+            style={{ width: '100%' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, opacity: 0.6 }}>
+            <span>Young adult (~20)</span>
+            <span>Elderly (~80)</span>
+          </div>
+          <div style={{ fontSize: 10, opacity: 0.5, marginTop: 3 }}>
+            The brow descends, the lid drapes, the socket hollows, and the natural lashes thin —
+            watch the same design start to fail.
+          </div>
+        </label>
+      </div>
     </section>
   )
 }

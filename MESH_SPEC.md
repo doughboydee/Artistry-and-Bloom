@@ -83,6 +83,7 @@ saved alternate positions of the same vertices that the app blends toward.
 | `eyeOpening` | 7 mm vertical opening | 13 mm |
 | `eyeLength` | 24 mm corner-to-corner | 32 mm |
 | `noseBaseWidth` | nostril-to-nostril outer width 28 mm | 42 mm |
+| `age` | young adult (~20): full brow fat pad, taut lid | elderly (~80): the brow drops ~4 mm as its fat pad shrinks, the upper lid skin loosens and drapes ~4 mm over the crease, the socket hollows ~1–2 mm, and the globe settles ~2 mm back |
 
 Important limits:
 

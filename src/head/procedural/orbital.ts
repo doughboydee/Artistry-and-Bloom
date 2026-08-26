@@ -192,14 +192,19 @@ export function writeOrbitalPositions(
         const py = hug.y + (W.y - hug.y) * beta
         // Lift fades to zero at the rim so the patch lands exactly on the
         // shared boundary curve.
-        const pz = hug.z + (shellZAt(px, py, a) + 0.15 * (1 - beta) - hug.z) * beta
+        const pz = hug.z + (shellZAt(px, py, a) + 0.08 * (1 - beta) - hug.z) * beta
         p.set(px, py, pz)
       }
 
       // Hooding drape: skin above the crease pushed down and forward,
       // heaviest over the outer half of the eye.
       if (lid === 'upper' && a.lidHoodingMm > 0 && d > creaseD) {
-        const band = Math.exp(-(((d - creaseD - 2) / 3.5) ** 2))
+        // The fold slides DOWN toward the lash line as hooding gets heavy
+        // (severe drape rests near the margin regardless of crease height)
+        // and the band widens with it.
+        const bandCenter = Math.max(1.5, creaseD + 2 - 0.55 * a.lidHoodingMm)
+        const bandWidth = 3.5 + 0.5 * a.lidHoodingMm
+        const band = Math.exp(-(((d - bandCenter) / bandWidth) ** 2))
         const lat = 0.3 + 0.7 * smoothstep(0.3, 0.7, t)
         const amp = a.lidHoodingMm * band * lat
         // A real hood overhangs FORWARD past the lash roots as well as

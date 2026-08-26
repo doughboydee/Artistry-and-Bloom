@@ -59,8 +59,10 @@ const smoothstep = (e0: number, e1: number, x: number): number => {
 }
 
 /** Brow arch centerline height above eye level at lateral offset dxl from the
- *  eye center (negative = toward the nose, positive = toward the temple). */
-export const browArchY = (dxl: number): number => 21 + 4 * (1 - ((dxl - 5) / 22) ** 2)
+ *  eye center (negative = toward the nose, positive = toward the temple).
+ *  The whole brow complex descends with age as its fat pad shrinks. */
+export const browArchY = (dxl: number, a: ResolvedAnatomy): number =>
+  21 + 4 * (1 - ((dxl - 5) / 22) ** 2) - a.browDescentMm
 
 /** Lateral envelope of the brow ridge around one eye. */
 const browEnvelope = (dxl: number): number =>
@@ -75,7 +77,7 @@ export function browRidgeZ(x: number, y: number, a: ResolvedAnatomy): number {
   let v = 0
   for (const sign of [1, -1]) {
     const dxl = sign * x - xe
-    v += browEnvelope(dxl) * Math.exp(-((y - browArchY(dxl)) ** 2) / (2 * 6 * 6))
+    v += browEnvelope(dxl) * Math.exp(-((y - browArchY(dxl, a)) ** 2) / (2 * 6 * 6))
   }
   const glabella = 0.55 * Math.exp(-(x * x) / (2 * 10 * 10)) * Math.exp(-((y - 20) ** 2) / (2 * 7 * 7))
   return a.browProjectionMm * Math.min(1.05, v + glabella)
@@ -86,10 +88,12 @@ export function browRidgeZ(x: number, y: number, a: ResolvedAnatomy): number {
  *  socket hollows along with the globe. */
 function socketDish(x: number, y: number, a: ResolvedAnatomy): number {
   const xe = eyeCenterX(a)
-  const depth = 2.5 + Math.max(0, -3 - a.globeCenterZMm) * 0.6
+  const depth = 2.5 + Math.max(0, -3 - a.globeCenterZMm) * 0.6 + a.socketHollowMm
   let v = 0
   for (const sign of [1, -1]) {
-    const d2 = ((x - sign * xe) / 14) ** 2 + (y / 11) ** 2
+    // Wide, gentle falloff so the recession spreads instead of ringing the
+    // socket with a visible curvature band.
+    const d2 = ((x - sign * xe) / 17) ** 2 + (y / 14) ** 2
     v += depth * Math.exp(-d2)
   }
   return v
@@ -165,7 +169,7 @@ export function shellGridXY(i: number, j: number): { x: number; y: number } {
 const eyeHoleMetric = (x: number, y: number, sign: number): number =>
   ((x - sign * NEUTRAL_EYE_X) / EYE_HOLE_RX) ** 2 + ((y - EYE_HOLE_CY) / EYE_HOLE_RY) ** 2
 
-const insideEyeHole = (x: number, y: number): boolean =>
+export const insideEyeHole = (x: number, y: number): boolean =>
   eyeHoleMetric(x, y, 1) < 1 || eyeHoleMetric(x, y, -1) < 1
 
 /** Snap a neutral-space point that falls inside a hole onto its boundary. */

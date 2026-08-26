@@ -72,14 +72,24 @@ export interface ResolvedAnatomy {
   globeRadiusMm: number
   lidThicknessMm: number
   globeCenterZMm: number
+  /** Age-driven drop of the whole brow complex, mm. */
+  browDescentMm: number
+  /** Age-driven extra hollowing of the orbital socket, mm. */
+  socketHollowMm: number
+  /** The age parameter itself (0..1), for downstream consumers. */
+  age: number
 }
 
 export function resolveAnatomy(p: AnatomyParams, c: Calibration = CALIBRATION): ResolvedAnatomy {
+  const age = p.age ?? 0
   return {
     browProjectionMm: fromRange(c.browProjectionMm, p.browProjection),
     eyeDepthOffsetMm: fromRange(c.eyeDepthOffsetMm, p.eyeDepth),
     creaseHeightMm: fromRange(c.creaseHeightMm, p.creaseHeight),
-    lidHoodingMm: c.lidHoodingMaxMm * p.lidHooding,
+    // Age loosens the upper-lid skin: extra drape on top of the hooding
+    // slider (dermatochalasis is often severe by ~80), clamped so the fold
+    // can't pass through itself.
+    lidHoodingMm: Math.min(7, c.lidHoodingMaxMm * p.lidHooding + age * 4),
     outerCornerTiltRad: (fromRange(c.outerCornerTiltDeg, p.outerCornerTilt) * Math.PI) / 180,
     eyeSpacingMm: fromRange(c.eyeSpacingMm, p.eyeSpacing),
     eyeOpeningMm: fromRange(c.eyeOpeningMm, p.eyeOpening),
@@ -87,6 +97,10 @@ export function resolveAnatomy(p: AnatomyParams, c: Calibration = CALIBRATION): 
     noseBaseWidthMm: fromRange(c.noseBaseWidthMm, p.noseBaseWidth),
     globeRadiusMm: c.globeRadiusMm,
     lidThicknessMm: c.lidThicknessMm,
-    globeCenterZMm: c.globeBaseZMm + fromRange(c.eyeDepthOffsetMm, p.eyeDepth),
+    // Orbital fat loss lets the globe settle back with age.
+    globeCenterZMm: c.globeBaseZMm + fromRange(c.eyeDepthOffsetMm, p.eyeDepth) - age * 2,
+    browDescentMm: age * 4,
+    socketHollowMm: age * 1.2,
+    age,
   }
 }

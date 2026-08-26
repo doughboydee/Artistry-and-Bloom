@@ -29,6 +29,13 @@ export interface AnatomyParams {
   eyeLength: number
   /** Alar base width (brow mapping lines are anchored here): 0 narrow → 1 wide. */
   noseBaseWidth: number
+  /**
+   * Age, 0 young adult (~20) → 1 elderly (~80). Drives real anatomy, not a
+   * skin texture: the brow fat pad shrinks and the brow descends, upper lid
+   * skin loosens and drapes, orbital fat descends and the socket hollows,
+   * and the natural lashes thin, shorten, and lose curl.
+   */
+  age: number
 }
 
 export type Eye = 'left' | 'right'
@@ -43,6 +50,7 @@ export const NEUTRAL_PARAMS: AnatomyParams = {
   eyeOpening: 0.5,
   eyeLength: 0.5,
   noseBaseWidth: 0.5,
+  age: 0,
 }
 
 /**

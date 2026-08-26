@@ -40,6 +40,20 @@ export const DEFAULT_NATURAL_LASHES: NaturalLashes = {
   curl: 0.4,
 }
 
+/**
+ * Natural lashes age: they thin (fewer and finer), shorten, and lose curl.
+ * Applied on top of the student's natural-lash settings.
+ */
+export function agedNaturalLashes(n: NaturalLashes, age: number): NaturalLashes {
+  return {
+    ...n,
+    density: n.density * (1 - 0.45 * age),
+    thickness: n.thickness * (1 - 0.3 * age),
+    lengthMm: n.lengthMm * (1 - 0.15 * age),
+    curl: n.curl * (1 - 0.5 * age),
+  }
+}
+
 export const EXTENSION_DIAMETERS_MM = [0.03, 0.05, 0.07, 0.1, 0.15, 0.2] as const
 export const EXTENSION_LENGTHS_MM = [8, 9, 10, 11, 12, 13, 14, 15] as const
 

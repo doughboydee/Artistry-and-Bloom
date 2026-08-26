@@ -10,6 +10,7 @@ import {
   buildNaturalLashes,
   buildTubeGeometryFor,
 } from '../lashes/fiberGeometry'
+import { agedNaturalLashes } from '../lashes/lashDesign'
 import { useAppStore, type FaceId } from '../state/store'
 
 const VERDICT_COLORS: Record<Exclude<FiberVerdict, 'ghosted'>, string> = {
@@ -50,8 +51,11 @@ export function LashSet({
   // version) when params change — lash line and BVH must be re-read after.
   const built = useMemo(() => {
     const line = head.getLashLine(eye, 80)
-    const naturals = buildNaturalLashes(line, anchors, natural)
-    const extensions = buildExtensions(line, anchors, natural, design)
+    // The client's lashes age with the face: thinner, shorter, straighter —
+    // and extensions can only attach where a natural lash still grows.
+    const aged = agedNaturalLashes(natural, faceParams.age)
+    const naturals = buildNaturalLashes(line, anchors, aged)
+    const extensions = buildExtensions(line, anchors, aged, design)
 
     const geometries: { verdict: FiberVerdict; geometry: BufferGeometry }[] = []
     let summary = null

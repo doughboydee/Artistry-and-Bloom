@@ -21,15 +21,21 @@ import type {
 import { resolveAnatomy, type ResolvedAnatomy } from '../calibration'
 import { computeEyeFrame, marginPoint, sampleLashLine } from './margins'
 import {
+  SHELL_COLS,
+  SHELL_ROWS,
   SHELL_VERTEX_COUNT,
   buildShellIndices,
   writeShellPositions,
+  shellGridXY,
   shellZAt,
   shellNormalAt,
   browArchY,
   eyeCenterX,
+  insideEyeHole,
 } from './shell'
 import {
+  ORBITAL_RINGS,
+  ORBITAL_SECTORS,
   ORBITAL_VERTEX_COUNT,
   buildOrbitalIndices,
   writeOrbitalPositions,
@@ -135,6 +141,7 @@ export class ProceduralHead implements HeadModel {
     const attr = this.geometry.getAttribute('position') as BufferAttribute
     attr.needsUpdate = true
     this.geometry.computeVertexNormals()
+    this.weldSeamNormals(a)
     this.geometry.computeBoundingSphere()
 
     for (const eye of ['left', 'right'] as const) {
@@ -143,6 +150,58 @@ export class ProceduralHead implements HeadModel {
     }
 
     this.version++
+  }
+
+  /**
+   * The shell's eye-hole edge and the orbital patch's rim trace the same
+   * curve but are separate vertices, so averaged normals differ across the
+   * seam and light it up as a hard ring. Overwrite the boundary normals on
+   * both sides with the analytic shell normal so they shade identically.
+   */
+  private weldSeamNormals(a: ResolvedAnatomy): void {
+    const normals = this.geometry.getAttribute('normal') as BufferAttribute
+    const narr = normals.array as Float32Array
+    const parr = this.positions
+
+    // Shell vertices that were snapped onto a hole boundary: their RAW grid
+    // position lies inside a hole.
+    for (let j = 0; j < SHELL_ROWS; j++) {
+      for (let i = 0; i < SHELL_COLS; i++) {
+        const raw = shellGridXY(i, j)
+        if (!insideEyeHole(raw.x, raw.y)) continue
+        const vi = j * SHELL_COLS + i
+        const n = shellNormalAt(parr[vi * 3]!, parr[vi * 3 + 1]!, a)
+        narr[vi * 3] = n.x
+        narr[vi * 3 + 1] = n.y
+        narr[vi * 3 + 2] = n.z
+      }
+    }
+
+    // Orbital patches: the rim ring gets the exact shell normal; the ring
+    // just inside blends 50/50 so the transition is gradual.
+    for (const base of [
+      SHELL_VERTEX_COUNT,
+      SHELL_VERTEX_COUNT + ORBITAL_VERTEX_COUNT,
+    ]) {
+      for (const [ring, weight] of [
+        [ORBITAL_RINGS, 1],
+        [ORBITAL_RINGS - 1, 0.5],
+      ] as const) {
+        for (let s = 0; s < ORBITAL_SECTORS; s++) {
+          const vi = base + ring * ORBITAL_SECTORS + s
+          const n = shellNormalAt(parr[vi * 3]!, parr[vi * 3 + 1]!, a)
+          const inv = 1 - weight
+          const nx = narr[vi * 3]! * inv + n.x * weight
+          const ny = narr[vi * 3 + 1]! * inv + n.y * weight
+          const nz = narr[vi * 3 + 2]! * inv + n.z * weight
+          const len = Math.hypot(nx, ny, nz) || 1
+          narr[vi * 3] = nx / len
+          narr[vi * 3 + 1] = ny / len
+          narr[vi * 3 + 2] = nz / len
+        }
+      }
+    }
+    normals.needsUpdate = true
   }
 
   getLashLine(eye: Eye, samples = 60): LashLineSample[] {
@@ -157,7 +216,7 @@ export class ProceduralHead implements HeadModel {
     return (u: number, v: number) => {
       const dxl = -20 + 46 * u // inner end of the brow → tail
       const x = sign * (xe + dxl)
-      const y = browArchY(dxl) + (v - 0.5) * 16
+      const y = browArchY(dxl, a) + (v - 0.5) * 16
       const n = shellNormalAt(x, y, a)
       return {
         position: new Vector3(x, y, shellZAt(x, y, a) + 0.2),
