@@ -184,7 +184,8 @@ export class ProceduralHead implements HeadModel {
       SHELL_VERTEX_COUNT + ORBITAL_VERTEX_COUNT,
     ]) {
       for (const [ring, weight] of [
-        [ORBITAL_RINGS, 1],
+        [ORBITAL_RINGS + 1, 1], // gasket
+        [ORBITAL_RINGS, 1], // rim
         [ORBITAL_RINGS - 1, 0.5],
       ] as const) {
         for (let s = 0; s < ORBITAL_SECTORS; s++) {

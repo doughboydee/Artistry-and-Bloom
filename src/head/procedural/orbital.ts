@@ -36,7 +36,15 @@ export const ORBITAL_RINGS = 18 // radial subdivisions margin → rim
  * continuous line and glides smoothly as the slider moves.
  */
 export const S_CREASE = 6
-export const ORBITAL_VERTEX_COUNT = ORBITAL_SECTORS * (ORBITAL_RINGS + 1)
+/**
+ * One extra "gasket" ring past the rim: the patch rim and the shell's hole
+ * edge lie on the same ellipse but with different vertices, so their chord
+ * segments open thin lens-shaped slits. The gasket overshoots the ellipse
+ * slightly, tucked just BEHIND the shell, so any slit shows clay-colored
+ * backing instead of a see-through hole.
+ */
+export const ORBITAL_ROWS = ORBITAL_RINGS + 2 // rings 0..RINGS plus the gasket
+export const ORBITAL_VERTEX_COUNT = ORBITAL_SECTORS * ORBITAL_ROWS
 
 const HALF = ORBITAL_SECTORS / 2
 
@@ -247,6 +255,14 @@ export function writeOrbitalPositions(
       out[k + 1] = p.y
       out[k + 2] = p.z
     }
+
+    // Gasket ring: 10% past the rim ellipse, tucked behind the shell.
+    const gx = warpX(sign * NEUTRAL_EYE_X + dx * rimR * 1.1, EYE_HOLE_CY + dy * rimR * 1.1, a)
+    const gy = EYE_HOLE_CY + dy * rimR * 1.1
+    const gk = base + ((ORBITAL_RINGS + 1) * ORBITAL_SECTORS + i) * 3
+    out[gk] = gx
+    out[gk + 1] = gy
+    out[gk + 2] = shellZAt(gx, gy, a) - 0.3
   }
 }
 
@@ -257,7 +273,7 @@ export function writeOrbitalPositions(
 export function buildOrbitalIndices(vertexBase: number, eye: Eye): number[] {
   const indices: number[] = []
   const flip = eye === 'right'
-  for (let s = 0; s < ORBITAL_RINGS; s++) {
+  for (let s = 0; s < ORBITAL_ROWS - 1; s++) {
     for (let i = 0; i < ORBITAL_SECTORS; i++) {
       const i1 = (i + 1) % ORBITAL_SECTORS
       const a = vertexBase + s * ORBITAL_SECTORS + i

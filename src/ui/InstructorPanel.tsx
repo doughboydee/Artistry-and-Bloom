@@ -31,6 +31,7 @@ export function InstructorPanel({
   const [saved, setSaved] = useState<SavedScenario[]>(() => loadSavedScenarios())
   const [name, setName] = useState('')
   const [notice, setNotice] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const builtIns = useMemo(() => builtInScenarios(), [])
 
   const flash = (msg: string) => {
@@ -123,31 +124,53 @@ export function InstructorPanel({
         Copy share link (opens this exact setup)
       </button>
 
-      <div style={{ fontSize: 11, opacity: 0.6, margin: '14px 0 4px' }}>Head model</div>
-      <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 4 }}>Current: {headSource}</div>
       <button
-        onClick={() => void downloadBakedGlb()}
-        style={{ ...buttonStyle, display: 'block', width: '100%' }}
+        onClick={() => setShowAdvanced((v) => !v)}
+        style={{
+          ...buttonStyle,
+          display: 'block',
+          width: '100%',
+          marginTop: 14,
+          textAlign: 'left',
+          opacity: 0.75,
+        }}
       >
-        Export head for Blender (.glb)
+        {showAdvanced ? '▾' : '▸'} Advanced: custom head model (for 3D artists)
       </button>
-      <div style={{ fontSize: 10, opacity: 0.5, marginTop: 3 }}>
-        Opens directly in Blender with the sliders included as shape keys — a scaffold for the
-        sculptor, following MESH_SPEC.md.
-      </div>
-      <label style={{ ...buttonStyle, display: 'block', width: '100%', marginTop: 8, textAlign: 'center' }}>
-        Load sculpted head (.glb)…
-        <input
-          type="file"
-          accept=".glb,.gltf"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) onLoadHeadFile(file)
-            e.target.value = ''
-          }}
-        />
-      </label>
+      {showAdvanced && (
+        <div style={{ paddingLeft: 4, borderLeft: '2px solid #33363d', marginTop: 6 }}>
+          <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 6 }}>
+            Only needed if you commission a sculpted head — see MESH_SPEC.md. The built-in head is
+            fully functional without any of this.
+          </div>
+          <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 4 }}>Current: {headSource}</div>
+          <button
+            onClick={() => void downloadBakedGlb()}
+            style={{ ...buttonStyle, display: 'block', width: '100%' }}
+          >
+            Export head for Blender (.glb)
+          </button>
+          <div style={{ fontSize: 10, opacity: 0.5, marginTop: 3 }}>
+            Opens directly in Blender with the sliders included as shape keys — a scaffold for the
+            sculptor.
+          </div>
+          <label
+            style={{ ...buttonStyle, display: 'block', width: '100%', marginTop: 8, textAlign: 'center' }}
+          >
+            Load sculpted head (.glb)…
+            <input
+              type="file"
+              accept=".glb,.gltf"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onLoadHeadFile(file)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        </div>
+      )}
 
       {notice && <div style={{ fontSize: 11, color: '#7dc98f', marginTop: 8 }}>{notice}</div>}
     </section>
