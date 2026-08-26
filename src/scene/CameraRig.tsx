@@ -10,7 +10,7 @@ const PRESETS = {
   free: { pos: [140, 50, 280] as const, target: [0, 0, 15] as const },
 }
 
-export function CameraRig() {
+export function CameraRig({ viewId = 'A' }: { viewId?: string }) {
   const controlsRef = useRef<CameraControls>(null)
   const preset = useAppStore((s) => s.view.preset)
   const presetNonce = useAppStore((s) => s.view.presetNonce)
@@ -26,7 +26,8 @@ export function CameraRig() {
   // Test hook: lets automated end-to-end checks position the camera exactly.
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>
-    w.__cameraControls = controlsRef.current
+    if (viewId === 'A') w.__cameraControls = controlsRef.current
+    else w.__cameraControlsB = controlsRef.current
     w.__invalidate = invalidate
   })
 

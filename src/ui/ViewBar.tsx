@@ -37,6 +37,7 @@ export function ViewBar() {
           </button>
         ))}
       </div>
+      <CompareToggle />
       <label
         style={{
           display: 'flex',
@@ -52,5 +53,30 @@ export function ViewBar() {
         Show lash line (where extensions will attach)
       </label>
     </section>
+  )
+}
+
+function CompareToggle() {
+  const compareMode = useAppStore((s) => s.compareMode)
+  const setCompareMode = useAppStore((s) => s.setCompareMode)
+  return (
+    <label
+      style={{
+        display: 'flex',
+        gap: 8,
+        alignItems: 'center',
+        marginTop: 12,
+        fontSize: 12,
+        opacity: 0.9,
+        cursor: 'pointer',
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={compareMode}
+        onChange={(e) => setCompareMode(e.target.checked)}
+      />
+      Compare two faces (same design on both)
+    </label>
   )
 }

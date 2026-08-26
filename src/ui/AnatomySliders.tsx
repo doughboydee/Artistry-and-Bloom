@@ -8,13 +8,16 @@ interface SliderDef {
   high: string
 }
 
-// Phase 1 exposes the first four controls from the brief; the head already
-// understands all nine.
 const SLIDERS: SliderDef[] = [
   { key: 'browProjection', label: 'Brow bone projection', low: 'Flat', high: 'Heavy' },
   { key: 'eyeDepth', label: 'Eye depth', low: 'Protruding', high: 'Deep-set' },
   { key: 'creaseHeight', label: 'Upper lid crease height', low: 'Absent/low', high: 'High' },
+  { key: 'lidHooding', label: 'Lid hooding', low: 'None', high: 'Heavy' },
   { key: 'outerCornerTilt', label: 'Outer corner tilt', low: 'Downturned', high: 'Upturned' },
+  { key: 'eyeSpacing', label: 'Eye spacing', low: 'Close-set', high: 'Wide-set' },
+  { key: 'eyeOpening', label: 'Eye opening height', low: 'Narrow', high: 'Tall' },
+  { key: 'eyeLength', label: 'Eye length', low: 'Short', high: 'Long' },
+  { key: 'noseBaseWidth', label: 'Nose base width', low: 'Narrow', high: 'Wide' },
 ]
 
 export function AnatomySliders({ faceId }: { faceId: FaceId }) {

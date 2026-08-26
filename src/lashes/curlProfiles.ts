@@ -42,8 +42,11 @@ export const CURL_SPECS: Record<CurlFamily, CurlSpec> = {
   C: { baseStraightFraction: 0.18, sweepDeg: 60, rampPower: 1.2, sweepSpanFraction: 1 },
   CC: { baseStraightFraction: 0.15, sweepDeg: 72, rampPower: 1.1, sweepSpanFraction: 1 },
   D: { baseStraightFraction: 0.12, sweepDeg: 85, rampPower: 1.0, sweepSpanFraction: 1 },
-  L: { baseStraightFraction: 0.45, sweepDeg: 80, rampPower: 0.9, sweepSpanFraction: 0.35 },
-  M: { baseStraightFraction: 0.35, sweepDeg: 88, rampPower: 1.0, sweepSpanFraction: 0.45 },
+  // L/M: the bend is sharp and localized but the total lift angle is
+  // moderate, and the post-bend tail is short — the tip stays low and
+  // forward, which is exactly how these curls clear a hooded lid.
+  L: { baseStraightFraction: 0.5, sweepDeg: 62, rampPower: 0.9, sweepSpanFraction: 0.3 },
+  M: { baseStraightFraction: 0.38, sweepDeg: 74, rampPower: 1.0, sweepSpanFraction: 0.42 },
 }
 
 /** Heading angle (radians) at normalized arc position u ∈ [0, 1]. */

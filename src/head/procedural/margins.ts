@@ -181,6 +181,18 @@ export function sampleLashLine(
       .addScaledVector(away, Math.sin(growthAngleRad))
       .normalize()
 
+    // Real lashes emerge predominantly FORWARD everywhere along the lid,
+    // with only a mild radial fan. The globe-radial normal is dominant only
+    // at the lid's front pole; toward the corners it points sideways
+    // (nasally at the inner corner — straight into the nose bridge). Blend
+    // heavily toward +Z, more so at the corners.
+    const tEdge = Math.min(k / (count - 1), 1 - k / (count - 1))
+    const forwardBlend = 0.6 + 0.25 * (1 - Math.min(1, tEdge / 0.15))
+    growthDir
+      .multiplyScalar(1 - forwardBlend)
+      .add(new Vector3(0, 0, forwardBlend))
+      .normalize()
+
     samples.push({
       t: k / (count - 1),
       position,

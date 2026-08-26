@@ -202,8 +202,11 @@ export function writeOrbitalPositions(
         const band = Math.exp(-(((d - creaseD - 2) / 3.5) ** 2))
         const lat = 0.3 + 0.7 * smoothstep(0.3, 0.7, t)
         const amp = a.lidHoodingMm * band * lat
-        p.y -= amp * 0.8
-        p.z += amp * 0.45
+        // A real hood overhangs FORWARD past the lash roots as well as
+        // drooping down — that forward shelf is what upward-curling
+        // extensions collide with.
+        p.y -= amp * 0.75
+        p.z += amp * 0.9
       }
 
       // The lid can never pass inside the globe: clamp to the wrap sphere.

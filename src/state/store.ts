@@ -12,6 +12,24 @@ import {
 export type FaceId = 'A' | 'B'
 export type ViewPreset = 'front' | 'profile' | 'free'
 
+export interface FitSettings {
+  enabled: boolean
+  safetyMarginMm: number
+  ghostThreshold: number
+  showGhosts: boolean
+}
+
+export interface EyeFitSummary {
+  total: number
+  colliding: number
+  near: number
+  ghosted: number
+}
+
+export type FitResults = Partial<
+  Record<FaceId, Partial<Record<'left' | 'right', EyeFitSummary>>>
+>
+
 interface ViewState {
   preset: ViewPreset
   /** Bumped every time a preset button is clicked so the camera re-animates
@@ -29,6 +47,8 @@ interface AppState {
   naturalLashes: NaturalLashes
   showNaturalLashes: boolean
   showExtensions: boolean
+  fitSettings: FitSettings
+  fitResults: FitResults
   setFaceParam: (face: FaceId, key: keyof AnatomyParams, value: number) => void
   resetFace: (face: FaceId) => void
   setPreset: (preset: ViewPreset) => void
@@ -39,6 +59,10 @@ interface AppState {
   setNaturalParam: (key: keyof NaturalLashes, value: number) => void
   toggleNaturalLashes: () => void
   toggleExtensions: () => void
+  setFitSetting: <K extends keyof FitSettings>(key: K, value: FitSettings[K]) => void
+  reportFitResult: (face: FaceId, eye: 'left' | 'right', summary: EyeFitSummary) => void
+  setCompareMode: (on: boolean) => void
+  setActiveFace: (face: FaceId) => void
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -100,4 +124,21 @@ export const useAppStore = create<AppState>()((set) => ({
 
   toggleNaturalLashes: () => set((s) => ({ showNaturalLashes: !s.showNaturalLashes })),
   toggleExtensions: () => set((s) => ({ showExtensions: !s.showExtensions })),
+
+  fitSettings: { enabled: true, safetyMarginMm: 0.5, ghostThreshold: 0.5, showGhosts: true },
+  fitResults: {},
+
+  setFitSetting: (key, value) =>
+    set((s) => ({ fitSettings: { ...s.fitSettings, [key]: value } })),
+
+  reportFitResult: (face, eye, summary) =>
+    set((s) => ({
+      fitResults: {
+        ...s.fitResults,
+        [face]: { ...s.fitResults[face], [eye]: summary },
+      },
+    })),
+
+  setCompareMode: (on) => set({ compareMode: on }),
+  setActiveFace: (face) => set({ activeFace: face }),
 }))

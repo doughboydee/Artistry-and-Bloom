@@ -10,10 +10,13 @@ has never had.
 
 ## Status
 
-Phase 1 of 6: procedural stand-in head with orbit/front/profile cameras and
-the first four anatomy sliders (brow bone projection, eye depth, upper lid
-crease height, outer corner tilt). See `MESH_SPEC.md` for what the future
-sculpted head must provide.
+Phases 1-3 of 6 complete: procedural stand-in head with all nine anatomy
+sliders, one-click front/profile cameras, procedural natural lashes and
+extensions with real curl-family geometry (B/C/CC/D/L/M), the zone-based
+map editor with classic preset maps, and the fit test - real-geometry
+collision (red/amber), straight-ahead occlusion (ghosted), and side-by-side
+comparison of one design on two faces. See `MESH_SPEC.md` for what the
+future sculpted head must provide.
 
 ## Principles
 

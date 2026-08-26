@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useThree } from '@react-three/fiber'
 import { BufferAttribute, BufferGeometry } from 'three'
 import { ProceduralHead } from '../head/procedural/ProceduralHead'
+import { SkinBVH } from '../fit/skinBvh'
 import { useAppStore, type FaceId } from '../state/store'
 import { LashSet } from './LashSet'
 
@@ -17,6 +18,7 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
   const invalidate = useThree((s) => s.invalidate)
 
   const head = useMemo(() => new ProceduralHead(params), [])
+  const bvh = useMemo(() => new SkinBVH(head), [head])
   useEffect(() => () => head.dispose(), [head])
 
   // Apply parameters during render (before children render) so LashSet reads
@@ -64,8 +66,8 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
           <pointsMaterial color="#ff4d6d" size={1.6} sizeAttenuation />
         </points>
       )}
-      <LashSet head={head} faceId={faceId} eye="left" />
-      <LashSet head={head} faceId={faceId} eye="right" />
+      <LashSet head={head} bvh={bvh} faceId={faceId} eye="left" />
+      <LashSet head={head} bvh={bvh} faceId={faceId} eye="right" />
     </group>
   )
 }

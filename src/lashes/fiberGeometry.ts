@@ -26,6 +26,8 @@ export interface FiberSet {
   fiberCount: number
   /** Lash-line position t of each fiber (zone lookups / reporting). */
   anchorT: Float32Array
+  /** Base diameter per fiber, mm (needed to rebuild subset geometries). */
+  baseDiameters: Float32Array
 }
 
 /** Deterministic PRNG (mulberry32) so lashes don't reshuffle every change. */
@@ -47,13 +49,19 @@ export interface Anchor {
   present: number // 0..1 threshold roll against density
 }
 
+/** Lashes don't grow at the tear-duct corner or the very outer commissure:
+ *  anchors cover the true lash-bearing stretch of the margin. */
+const T_MIN = 0.08
+const T_MAX = 0.97
+
 /** Fixed anchor layout per eye — jitter is stable across regenerations. */
 export function buildAnchors(eye: Eye, count = MAX_ANCHORS): Anchor[] {
   const rng = makeRng(eye === 'left' ? 1337 : 7331)
   const anchors: Anchor[] = []
+  const span = T_MAX - T_MIN
   for (let i = 0; i < count; i++) {
     anchors.push({
-      t: (i + 0.5) / count + (rng() - 0.5) * (0.6 / count),
+      t: T_MIN + ((i + 0.5) / count) * span + (rng() - 0.5) * ((0.6 * span) / count),
       jitterFan: rng() * 2 - 1,
       jitterLen: rng() * 2 - 1,
       present: rng(),
@@ -130,12 +138,13 @@ function writeFiberPolyline(
   }
 }
 
-/** Sweep polylines into one merged tapered-tube geometry. */
-function buildTubeGeometry(
+/** Sweep a subset of polylines into one merged tapered-tube geometry. */
+export function buildTubeGeometryFor(
   polylines: Float32Array,
-  fiberCount: number,
+  fiberIndices: ArrayLike<number>,
   baseDiameters: Float32Array,
 ): BufferGeometry {
+  const fiberCount = fiberIndices.length
   const ringsPerFiber = FIBER_STEPS + 1
   const vertsPerFiber = ringsPerFiber * TUBE_SIDES
   const positions = new Float32Array(fiberCount * vertsPerFiber * 3)
@@ -148,9 +157,10 @@ function buildTubeGeometry(
   const up = new Vector3()
   const UP_HINT = new Vector3(0.13, 0.35, 0.93).normalize()
 
-  for (let f = 0; f < fiberCount; f++) {
+  for (let n = 0; n < fiberCount; n++) {
+    const f = fiberIndices[n]!
     const base = f * ringsPerFiber * 3
-    const vBase = f * vertsPerFiber
+    const vBase = n * vertsPerFiber
     for (let i = 0; i < ringsPerFiber; i++) {
       p.set(polylines[base + i * 3]!, polylines[base + i * 3 + 1]!, polylines[base + i * 3 + 2]!)
       const j = Math.min(i + 1, ringsPerFiber - 1)
@@ -213,8 +223,9 @@ export function buildNaturalLashes(
       t: a.t,
       lengthMm: Math.max(3, natural.lengthMm * (1 + 0.25 * a.jitterLen)),
       curl,
-      // growthDirection 0..1 → pitch −35°..+25° relative to the frame.
-      launchPitchRad: ((natural.growthDirection - 0.55) * 60 * Math.PI) / 180,
+      // Natural lashes launch downward-forward; growthDirection 0..1 maps
+      // to a pitch of −45° (drooping) … +5° (lifted), −20° at neutral.
+      launchPitchRad: (((natural.growthDirection - 0.5) * 50 - 20) * Math.PI) / 180,
       baseDiameterMm: 0.05 + natural.thickness * 0.07,
       fanRad: a.jitterFan * 0.12,
     })
@@ -240,7 +251,7 @@ export function buildExtensions(
       curl: zone.curl,
       // Extensions are glued along the natural lash base, so they inherit
       // the natural launch direction.
-      launchPitchRad: ((natural.growthDirection - 0.55) * 60 * Math.PI) / 180,
+      launchPitchRad: (((natural.growthDirection - 0.5) * 50 - 20) * Math.PI) / 180,
       baseDiameterMm: zone.diameterMm * 3, // exaggerated so 0.15mm reads on screen
       fanRad: a.jitterFan * 0.12,
     })
@@ -261,10 +272,12 @@ function buildFiberSet(line: LashLineSample[], specs: FiberSpec[]): FiberSet {
     baseDiameters[f] = spec.baseDiameterMm
   })
 
+  const allIndices = Array.from({ length: specs.length }, (_, i) => i)
   return {
-    geometry: buildTubeGeometry(polylines, specs.length, baseDiameters),
+    geometry: buildTubeGeometryFor(polylines, allIndices, baseDiameters),
     polylines,
     fiberCount: specs.length,
     anchorT,
+    baseDiameters,
   }
 }
