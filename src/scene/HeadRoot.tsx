@@ -2,6 +2,9 @@ import { useEffect, useMemo } from 'react'
 import { useThree } from '@react-three/fiber'
 import { BufferAttribute, BufferGeometry } from 'three'
 import { ProceduralHead } from '../head/procedural/ProceduralHead'
+import { GltfMorphHead } from '../head/gltf/GltfMorphHead'
+import { BUILT_IN_NAME, getLoadedHeadScene } from '../head/headSource'
+import type { HeadModel } from '../head/HeadModel'
 import { SkinBVH } from '../fit/skinBvh'
 import { useAppStore, type FaceId } from '../state/store'
 import { BrowSet } from './BrowSet'
@@ -19,7 +22,24 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
   const showLashLineDebug = useAppStore((s) => s.view.showLashLineDebug)
   const invalidate = useThree((s) => s.invalidate)
 
-  const head = useMemo(() => new ProceduralHead(params), [])
+  const headSourceName = useAppStore((s) => s.headSourceName)
+  const setHeadSourceName = useAppStore((s) => s.setHeadSourceName)
+
+  const head: HeadModel = useMemo(() => {
+    const scene = getLoadedHeadScene()
+    if (scene && headSourceName !== BUILT_IN_NAME) {
+      try {
+        // Each face gets its own node tree; GltfMorphHead deep-copies the
+        // geometries it mutates.
+        return new GltfMorphHead(scene.clone(true), params)
+      } catch (err) {
+        console.error('Loaded head rejected, falling back to stand-in:', err)
+        setHeadSourceName(BUILT_IN_NAME)
+      }
+    }
+    return new ProceduralHead(params)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headSourceName])
   const bvh = useMemo(() => new SkinBVH(head), [head])
   useEffect(() => () => head.dispose(), [head])
 

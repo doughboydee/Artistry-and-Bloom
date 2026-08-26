@@ -1,13 +1,23 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { View } from '@react-three/drei'
 import { FaceScene } from './scene/FaceScene'
 import { CameraRig } from './scene/CameraRig'
 import { SidePanel } from './ui/SidePanel'
+import { decodeScenarioFromHash } from './state/scenario'
 import { useAppStore } from './state/store'
 
 export default function App() {
   const compareMode = useAppStore((s) => s.compareMode)
+  const applyScenario = useAppStore((s) => s.applyScenario)
+
+  // A share link carries the whole scenario in the URL hash: #s=...
+  useEffect(() => {
+    const match = /#s=([A-Za-z0-9_-]+)/.exec(location.hash)
+    if (!match) return
+    const scenario = decodeScenarioFromHash(match[1]!)
+    if (scenario) applyScenario(scenario)
+  }, [applyScenario])
   const containerRef = useRef<HTMLDivElement>(null!)
   const viewARef = useRef<HTMLDivElement>(null!)
   const viewBRef = useRef<HTMLDivElement>(null!)

@@ -54,6 +54,9 @@ interface AppState {
   browParams: BrowParams
   showBrows: boolean
   showBrowMapping: boolean
+  /** Display name of the current head implementation (see head/headSource). */
+  headSourceName: string
+  setHeadSourceName: (name: string) => void
   setFaceParam: (face: FaceId, key: keyof AnatomyParams, value: number) => void
   resetFace: (face: FaceId) => void
   setPreset: (preset: ViewPreset) => void
@@ -71,9 +74,11 @@ interface AppState {
   setBrowParam: (key: keyof BrowParams, value: number) => void
   toggleBrows: () => void
   toggleBrowMapping: () => void
+  snapshotScenario: () => import('./scenario').Scenario
+  applyScenario: (s: import('./scenario').Scenario) => void
 }
 
-export const useAppStore = create<AppState>()((set) => ({
+export const useAppStore = create<AppState>()((set, get) => ({
   faces: { A: { ...NEUTRAL_PARAMS }, B: { ...NEUTRAL_PARAMS } },
   activeFace: 'A',
   compareMode: false,
@@ -153,9 +158,37 @@ export const useAppStore = create<AppState>()((set) => ({
   browParams: { ...DEFAULT_BROW_PARAMS },
   showBrows: true,
   showBrowMapping: false,
+  headSourceName: 'Built-in stand-in head',
+  setHeadSourceName: (name) => set({ headSourceName: name }),
 
   setBrowParam: (key, value) =>
     set((s) => ({ browParams: { ...s.browParams, [key]: value } })),
   toggleBrows: () => set((s) => ({ showBrows: !s.showBrows })),
   toggleBrowMapping: () => set((s) => ({ showBrowMapping: !s.showBrowMapping })),
+
+  snapshotScenario: () => {
+    const s = get()
+    return JSON.parse(
+      JSON.stringify({
+        v: 1 as const,
+        faces: s.faces,
+        lashDesign: s.lashDesign,
+        naturalLashes: s.naturalLashes,
+        browParams: s.browParams,
+        fitSettings: s.fitSettings,
+        compareMode: s.compareMode,
+      }),
+    )
+  },
+
+  applyScenario: (scenario) =>
+    set({
+      faces: JSON.parse(JSON.stringify(scenario.faces)),
+      lashDesign: JSON.parse(JSON.stringify(scenario.lashDesign)),
+      naturalLashes: { ...scenario.naturalLashes },
+      browParams: { ...scenario.browParams },
+      fitSettings: { ...scenario.fitSettings },
+      compareMode: scenario.compareMode,
+      activeFace: 'A',
+    }),
 }))

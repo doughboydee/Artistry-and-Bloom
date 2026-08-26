@@ -1,8 +1,10 @@
 import { AnatomySliders } from './AnatomySliders'
 import { BrowPanel } from './BrowPanel'
 import { FitTestPanel } from './FitTestPanel'
+import { InstructorPanel } from './InstructorPanel'
 import { LashDesignPanel } from './LashDesignPanel'
 import { ViewBar } from './ViewBar'
+import { loadHeadFromFile } from '../head/headSource'
 import { useAppStore, type FaceId } from '../state/store'
 
 function FaceTabs() {
@@ -37,6 +39,19 @@ function FaceTabs() {
 export function SidePanel() {
   const activeFace = useAppStore((s) => s.activeFace)
   const compareMode = useAppStore((s) => s.compareMode)
+  const headSourceName = useAppStore((s) => s.headSourceName)
+  const setHeadSourceName = useAppStore((s) => s.setHeadSourceName)
+
+  const onLoadHeadFile = (file: File) => {
+    loadHeadFromFile(file)
+      .then((name) => setHeadSourceName(name))
+      .catch((err) => {
+        console.error(err)
+        alert(
+          'That file could not be read as a head model. It must be a .glb following MESH_SPEC.md.',
+        )
+      })
+  }
   return (
     <aside
       style={{
@@ -59,6 +74,7 @@ export function SidePanel() {
       <FitTestPanel />
       <LashDesignPanel />
       <BrowPanel />
+      <InstructorPanel onLoadHeadFile={onLoadHeadFile} headSource={headSourceName} />
       <ViewBar />
     </aside>
   )

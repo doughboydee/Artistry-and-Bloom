@@ -10,7 +10,7 @@ has never had.
 
 ## Status
 
-Phases 1-5 of 6 complete: procedural stand-in head with all nine anatomy
+All 6 phases complete: procedural stand-in head with all nine anatomy
 sliders, one-click front/profile cameras, procedural natural lashes and
 extensions with real curl-family geometry (B/C/CC/D/L/M), the zone-based
 map editor with classic preset maps, and the fit test - real-geometry
@@ -20,7 +20,11 @@ comparison of one design on two faces - plus procedural brow hair
 brow-mapping overlay: the three lines from the nostril edge through the
 inner corner, pupil, and outer corner, recomputed as the anatomy changes - and the age control: the brow
 descends, the lid drapes, the socket hollows, and the natural lashes thin,
-so the same design visibly starts to fail on an older face. See `MESH_SPEC.md` for what the
+so the same design visibly starts to fail on an older face - plus the
+instructor features: built-in and saved teaching scenarios, shareable
+links that encode the whole setup in the URL, a one-click "Export head
+for Blender" (.glb with the sliders baked as shape keys, per MESH_SPEC),
+and a loader that swaps in a sculpted .glb head at runtime. See `MESH_SPEC.md` for what the
 future sculpted head must provide.
 
 ## Principles
