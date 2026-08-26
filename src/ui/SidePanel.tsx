@@ -1,4 +1,5 @@
 import { AnatomySliders } from './AnatomySliders'
+import { LashDesignPanel } from './LashDesignPanel'
 import { ViewBar } from './ViewBar'
 
 export function SidePanel() {
@@ -20,6 +21,7 @@ export function SidePanel() {
         succeed or fail.
       </p>
       <AnatomySliders faceId="A" />
+      <LashDesignPanel />
       <ViewBar />
     </aside>
   )

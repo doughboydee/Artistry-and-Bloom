@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import type { AnatomyParams } from '../head/HeadModel'
 import { NEUTRAL_PARAMS } from '../head/HeadModel'
+import type { LashDesign, LashZone, NaturalLashes, ZoneCount } from '../lashes/lashDesign'
+import {
+  DEFAULT_DESIGN,
+  DEFAULT_NATURAL_LASHES,
+  PRESET_MAPS,
+  applyPresetToZones,
+} from '../lashes/lashDesign'
 
 export type FaceId = 'A' | 'B'
 export type ViewPreset = 'front' | 'profile' | 'free'
@@ -18,10 +25,20 @@ interface AppState {
   activeFace: FaceId
   compareMode: boolean
   view: ViewState
+  lashDesign: LashDesign
+  naturalLashes: NaturalLashes
+  showNaturalLashes: boolean
+  showExtensions: boolean
   setFaceParam: (face: FaceId, key: keyof AnatomyParams, value: number) => void
   resetFace: (face: FaceId) => void
   setPreset: (preset: ViewPreset) => void
   toggleLashLineDebug: () => void
+  setZone: (index: number, patch: Partial<LashZone>) => void
+  setZoneCount: (count: ZoneCount) => void
+  applyPreset: (name: string) => void
+  setNaturalParam: (key: keyof NaturalLashes, value: number) => void
+  toggleNaturalLashes: () => void
+  toggleExtensions: () => void
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -49,4 +66,38 @@ export const useAppStore = create<AppState>()((set) => ({
     set((s) => ({
       view: { ...s.view, showLashLineDebug: !s.view.showLashLineDebug },
     })),
+
+  lashDesign: DEFAULT_DESIGN,
+  naturalLashes: { ...DEFAULT_NATURAL_LASHES },
+  showNaturalLashes: true,
+  showExtensions: true,
+
+  setZone: (index, patch) =>
+    set((s) => ({
+      lashDesign: {
+        zones: s.lashDesign.zones.map((z, i) => (i === index ? { ...z, ...patch } : z)),
+      },
+    })),
+
+  setZoneCount: (count) =>
+    set((s) => ({
+      lashDesign: { zones: applyPresetToZones(s.lashDesign.zones, count) },
+    })),
+
+  applyPreset: (name) =>
+    set((s) => {
+      const preset = PRESET_MAPS[name]
+      if (!preset) return s
+      return {
+        lashDesign: {
+          zones: applyPresetToZones(preset, s.lashDesign.zones.length as ZoneCount),
+        },
+      }
+    }),
+
+  setNaturalParam: (key, value) =>
+    set((s) => ({ naturalLashes: { ...s.naturalLashes, [key]: value } })),
+
+  toggleNaturalLashes: () => set((s) => ({ showNaturalLashes: !s.showNaturalLashes })),
+  toggleExtensions: () => set((s) => ({ showExtensions: !s.showExtensions })),
 }))

@@ -130,15 +130,16 @@ export function marginPoint(
 
 /**
  * Arc-length-uniform lash line samples along the upper margin with full
- * frames. `growthAngleRad` pitches the natural emergence direction away from
- * the pure surface normal toward "up and out over the lid edge".
+ * frames. `growthAngleRad` pitches the natural emergence direction from the
+ * surface normal toward the eye opening — real lashes leave the lid EDGE
+ * pointing forward, not up the lid; the curl then lifts the tip.
  */
 export function sampleLashLine(
   frame: EyeFrame,
   a: ResolvedAnatomy,
   eye: Eye,
   count: number,
-  growthAngleRad = (25 * Math.PI) / 180,
+  growthAngleRad = (-35 * Math.PI) / 180,
 ): LashLineSample[] {
   // Dense pass for arc-length parameterization.
   const DENSE = 128

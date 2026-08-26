@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { BufferAttribute, BufferGeometry } from 'three'
 import { ProceduralHead } from '../head/procedural/ProceduralHead'
 import { useAppStore, type FaceId } from '../state/store'
+import { LashSet } from './LashSet'
 
 /**
  * Owns the HeadModel instance for one face and keeps it in sync with the
@@ -18,8 +19,15 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
   const head = useMemo(() => new ProceduralHead(params), [])
   useEffect(() => () => head.dispose(), [head])
 
-  useEffect(() => {
+  // Apply parameters during render (before children render) so LashSet reads
+  // the lash line from the already-updated head. Idempotent, so React's
+  // double-render in strict mode is harmless.
+  useMemo(() => {
     head.setParams(params)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [head, params])
+
+  useEffect(() => {
     invalidate()
   }, [head, params, invalidate])
 
@@ -56,6 +64,8 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
           <pointsMaterial color="#ff4d6d" size={1.6} sizeAttenuation />
         </points>
       )}
+      <LashSet head={head} faceId={faceId} eye="left" />
+      <LashSet head={head} faceId={faceId} eye="right" />
     </group>
   )
 }
