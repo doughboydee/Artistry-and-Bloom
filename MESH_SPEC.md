@@ -152,6 +152,15 @@ lash-line chains.
 - [ ] All 9 morphs, exact names, calibrated to the table in section 4
 - [ ] Lash/brow line objects carry the same morphs
 - [ ] Both-eyes symmetry on every morph
+- [ ] Node transforms are fine (the app bakes them in on load), but keep
+      unit scale honest: 1 unit must equal 1 mm after all transforms
+- [ ] Known limit to design around: morphs blend in straight lines, so a
+      slider's in-between positions are linear mixes of neutral and maximum.
+      Sculpt each morph so its midpoint also looks anatomically right —
+      check 0.5 on every slider, not just the endpoints. Combined extremes
+      (e.g. full hooding + full age) will overshoot slightly on a morph
+      head compared to the built-in head; acceptable if the fit-test
+      verdict stays equivalent (the app's round-trip test checks this)
 
 ## Glossary
 

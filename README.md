@@ -7,25 +7,43 @@ to profile view to watch whether the plan works — the fit test the industry
 has never had.
 
 **Live app:** https://doughboydee.github.io/Artistry-and-Bloom/
+**Student guide:** https://doughboydee.github.io/Artistry-and-Bloom/guide.html
 
-## Status
+## Features
 
-All 6 phases complete: procedural stand-in head with all nine anatomy
-sliders, one-click front/profile cameras, procedural natural lashes and
-extensions with real curl-family geometry (B/C/CC/D/L/M), the zone-based
-map editor with classic preset maps, and the fit test - real-geometry
-collision (red/amber), straight-ahead occlusion (ghosted), and side-by-side
-comparison of one design on two faces - plus procedural brow hair
-(density, caliber, growth direction, position, fullness) and the live
-brow-mapping overlay: the three lines from the nostril edge through the
-inner corner, pupil, and outer corner, recomputed as the anatomy changes - and the age control: the brow
-descends, the lid drapes, the socket hollows, and the natural lashes thin,
-so the same design visibly starts to fail on an older face - plus the
-instructor features: built-in and saved teaching scenarios, shareable
-links that encode the whole setup in the URL, a one-click "Export head
-for Blender" (.glb with the sliders baked as shape keys, per MESH_SPEC),
-and a loader that swaps in a sculpted .glb head at runtime. See `MESH_SPEC.md` for what the
-future sculpted head must provide.
+**Anatomy** — a procedural stand-in head driven by ten measurable controls
+(brow projection, eye depth, crease height, lid hooding, corner tilt, eye
+spacing/opening/length, nose width, age). The age slider descends the brow,
+drapes the lid, hollows the socket, and thins the natural lashes and brow
+tails, so the same design visibly starts to fail on an older face.
+
+**Lash design** — procedural natural lashes plus extensions with real
+curl-family geometry (B/C/CC/D/L/M as measured heading-angle curves), a
+zone-based map editor (3–9 zones), and nine preset maps: natural, cat eye,
+doll eye, squirrel, open eye, fox eye, kitten, wispy (with a per-zone spike
+texture), and eyeliner effect.
+
+**The fit test** — every extension is measured against the actual 3D skin:
+collision (red = touches the lid, amber = inside the safety margin) and
+straight-ahead occlusion (ghosted = hidden behind the hood from the front),
+with per-eye plain-language summaries and side-by-side comparison of one
+design on two faces. The **precision check** is the second, independent
+rule: any zone longer than the generated natural lashes + 2 mm is flagged
+as follicle overload.
+
+**Mapping** — the **on-lid lash map** draws the under-eye pad map (zone
+boundaries + length·curl labels) on the anatomy itself. Brow mapping offers
+three industry methods — classic three-point pencil rays, thread mapping
+(vertical start/arch lines + a horizontal level-check line with live mm
+readout), and the golden-ratio (phi) construction — plus left/right
+**symmetry guides** with mm readouts. All lines are recomputed live from
+the landmarks as the anatomy changes.
+
+**Instructor tools** — built-in and saved teaching scenarios, shareable
+links that encode the whole setup in the URL (validated and clamped on
+load), and, under "Advanced", a one-click "Export head for Blender" (.glb
+with the sliders baked as shape keys, per `MESH_SPEC.md`) and a loader that
+swaps in a sculpted .glb head at runtime.
 
 ## Principles
 
