@@ -69,14 +69,24 @@ export function SidePanel() {
         Set up the anatomy, then check it from the profile — that&apos;s where designs
         succeed or fail.
       </p>
-      <a
-        href="./guide.html"
-        target="_blank"
-        rel="noreferrer"
-        style={{ fontSize: 11, color: '#7fb2d9', display: 'inline-block', marginBottom: 16 }}
-      >
-        Student guide: how the fit test works →
-      </a>
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <a
+          href="./manual.html"
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 11, color: '#7fb2d9' }}
+        >
+          User manual: every panel and control →
+        </a>
+        <a
+          href="./guide.html"
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 11, color: '#7fb2d9' }}
+        >
+          Student guide: how the fit test works →
+        </a>
+      </div>
       <FaceTabs />
       <AnatomySliders faceId={compareMode ? activeFace : 'A'} />
       <FitTestPanel />

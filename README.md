@@ -7,7 +7,8 @@ to profile view to watch whether the plan works — the fit test the industry
 has never had.
 
 **Live app:** https://doughboydee.github.io/Artistry-and-Bloom/
-**Student guide:** https://doughboydee.github.io/Artistry-and-Bloom/guide.html
+**User manual:** https://doughboydee.github.io/Artistry-and-Bloom/manual.html
+**Student guide (fit test deep-dive):** https://doughboydee.github.io/Artistry-and-Bloom/guide.html
 
 ## Features
 
