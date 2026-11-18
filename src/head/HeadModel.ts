@@ -1,4 +1,5 @@
 import type { Mesh, Object3D, Vector3 } from 'three'
+import type { HeadAppearance } from './appearance'
 
 /**
  * All anatomy parameters are normalized 0..1 slider values.
@@ -116,6 +117,11 @@ export interface HeadModel {
    * change — so consumers may cache geometry references. Bumps `version`.
    */
   setParams(params: AnatomyParams): void
+  /**
+   * Display-only settings (skin tone). Optional: a sculpted head that brings
+   * its own materials may ignore it. Must never change geometry.
+   */
+  setAppearance?(appearance: HeadAppearance): void
   /** Monotonic change counter; BVH refit, lash regen and fit tests watch it. */
   readonly version: number
   /** Arc-length-uniform samples of the upper lid margin with frames. */

@@ -35,7 +35,16 @@ export default function App() {
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%' }}>
       <SidePanel />
-      <div ref={containerRef} style={{ flex: 1, position: 'relative' }}>
+      <div
+        ref={containerRef}
+        style={{
+          flex: 1,
+          position: 'relative',
+          // Studio backdrop: a soft pool of light behind the head.
+          background:
+            'radial-gradient(ellipse at 50% 42%, #4a4d55 0%, #2b2d33 45%, #17181c 100%)',
+        }}
+      >
         <div
           style={{
             display: 'grid',
@@ -56,7 +65,11 @@ export default function App() {
         <Canvas
           eventSource={containerRef}
           frameloop="demand"
-          camera={{ position: [140, 50, 280], near: 1, far: 2000 }}
+          shadows="variance"
+          dpr={[1, 2]}
+          gl={{ antialias: true, toneMappingExposure: 0.95 }}
+          // A long (portrait) lens: faces look right at ~30°, distorted at 50°.
+          camera={{ position: [190, 50, 370], fov: 30, near: 1, far: 3000 }}
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
         >
           <View track={viewARef}>

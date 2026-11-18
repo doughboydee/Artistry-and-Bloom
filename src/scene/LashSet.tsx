@@ -15,7 +15,7 @@ import { agedNaturalLashes } from '../lashes/lashDesign'
 import { useAppStore, type FaceId } from '../state/store'
 
 const VERDICT_COLORS: Record<Exclude<FiberVerdict, 'ghosted'>, string> = {
-  safe: '#14100d',
+  safe: '#0d0a08',
   near: '#d99a2b',
   colliding: '#d43333',
 }
@@ -117,12 +117,12 @@ export function LashSet({
   return (
     <group>
       {showNatural && (
-        <mesh geometry={built.naturals.geometry}>
-          <meshStandardMaterial color="#5a4a3c" roughness={0.6} />
+        <mesh geometry={built.naturals.geometry} castShadow>
+          <meshStandardMaterial color="#2e231b" roughness={0.5} />
         </mesh>
       )}
       {showExtensions && !fitCurrent && (
-        <mesh geometry={built.extensions.geometry}>
+        <mesh geometry={built.extensions.geometry} castShadow>
           <meshStandardMaterial color={VERDICT_COLORS.safe} roughness={0.35} />
         </mesh>
       )}
@@ -142,7 +142,7 @@ export function LashSet({
               </mesh>
             )
           ) : (
-            <mesh key={verdict} geometry={geometry}>
+            <mesh key={verdict} geometry={geometry} castShadow>
               <meshStandardMaterial color={VERDICT_COLORS[verdict]} roughness={0.35} />
             </mesh>
           ),

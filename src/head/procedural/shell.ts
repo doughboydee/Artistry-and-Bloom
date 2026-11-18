@@ -26,8 +26,8 @@ const DEPTH_C = 72
 const DEPTH_Z0 = -58
 
 // Grid resolution (cols x rows of vertices).
-export const SHELL_COLS = 72
-export const SHELL_ROWS = 64
+export const SHELL_COLS = 96
+export const SHELL_ROWS = 96
 
 // Neutral eye-center distance from midline: holes are carved here and the
 // lateral warp recenters vertices when eye spacing changes.
@@ -111,13 +111,34 @@ function cheekZ(x: number, y: number, a: ResolvedAnatomy): number {
 }
 
 /**
+ * Lower-face narrowing: the footprint stays a full ellipse down to the nose
+ * base, then tapers toward the chin so the outline reads as a jaw rather
+ * than an egg. Applied identically to the grid footprint and to the depth
+ * function, so the shell's outer edge stays on the same curve. Equal to 1
+ * everywhere the eyes, brows and nose live — nothing the fit test measures
+ * moves.
+ */
+export const jawScale = (y: number): number => 1 - 0.27 * smoothstep(-28, -104, y)
+
+/** Soft-tissue fullness of the lower face: the mound the lips sit on (teeth
+ *  and maxilla behind them) and the chin pad. Broad, low-frequency shapes
+ *  only; lip detail lives in the denser mouth patch (mouth.ts). */
+function lowerFaceZ(x: number, y: number): number {
+  const mound = 4.2 * Math.exp(-((x / 25) ** 2) - ((y + 53) / 13) ** 2)
+  const chin = 5.5 * Math.exp(-((x / 15) ** 2) - ((y + 86) / 11) ** 2)
+  return mound + chin
+}
+
+/**
  * The shell surface height at world (x, y). Closed form — evaluated both by
  * the shell grid itself and by neighbouring patches at their borders.
  */
 export function shellZAt(x: number, y: number, a: ResolvedAnatomy): number {
-  const rho2 = (x / HALF_W) ** 2 + ((y - CENTER_Y) / HALF_H) ** 2
+  const rho2 = (x / (HALF_W * jawScale(y))) ** 2 + ((y - CENTER_Y) / HALF_H) ** 2
   const base = DEPTH_Z0 + DEPTH_C * Math.sqrt(Math.max(0, 1 - rho2))
-  return base + browRidgeZ(x, y, a) - socketDish(x, y, a) + cheekZ(x, y, a)
+  return (
+    base + browRidgeZ(x, y, a) - socketDish(x, y, a) + cheekZ(x, y, a) + lowerFaceZ(x, y)
+  )
 }
 
 /** Outward normal of the shell surface at (x, y), by central differences. */
@@ -162,7 +183,8 @@ export function shellGridXY(i: number, j: number): { x: number; y: number } {
   const u = (i / (SHELL_COLS - 1)) * 2 - 1
   const v = (j / (SHELL_ROWS - 1)) * 2 - 1
   const d = squareToDisc(u, v)
-  return { x: d.x * HALF_W, y: CENTER_Y + d.y * HALF_H }
+  const y = CENTER_Y + d.y * HALF_H
+  return { x: d.x * HALF_W * jawScale(y), y }
 }
 
 /**
@@ -209,6 +231,20 @@ function snapToEyeHoleBoundary(x: number, y: number, rx: number): { x: number; y
 const insideNoseHole = (x: number, y: number): boolean =>
   y > NOSE_HOLE_Y_MIN && y < NOSE_HOLE_Y_MAX && Math.abs(x) < noseHoleHalfWidth(y)
 
+// Mouth hole: the dense mouth patch (mouth.ts) covers this rectangle and
+// overlaps the shell by a few mm on every side, where both sample the same
+// smooth surface.
+export const MOUTH_X = 33
+export const MOUTH_Y_TOP = -32
+export const MOUTH_Y_BOTTOM = -75
+/** Shell cells survive up to this far inside the patch border (plus one
+ *  cell); the patch keeps its relief flat across that band. */
+export const MOUTH_OVERLAP = 2
+const insideMouthHole = (x: number, y: number): boolean =>
+  Math.abs(x) < MOUTH_X - MOUTH_OVERLAP &&
+  y < MOUTH_Y_TOP - MOUTH_OVERLAP &&
+  y > MOUTH_Y_BOTTOM + MOUTH_OVERLAP
+
 /**
  * Fixed index buffer for the shell grid, with cells dropped where their
  * center falls in an orbital or nose hole. Vertex ordering: row-major,
@@ -231,6 +267,7 @@ export function buildShellIndices(): number[] {
       const cx = (corners[0]!.x + corners[3]!.x) / 2
       const cy = (corners[0]!.y + corners[3]!.y) / 2
       if (insideNoseHole(cx, cy)) continue
+      if (corners.every((c) => insideMouthHole(c.x, c.y))) continue
       const a = j * SHELL_COLS + i
       const b = j * SHELL_COLS + i + 1
       const c = (j + 1) * SHELL_COLS + i
