@@ -18,6 +18,15 @@ spacing/opening/length, nose width, age). The age slider descends the brow,
 drapes the lid, hollows the socket, and thins the natural lashes and brow
 tails, so the same design visibly starts to fail on an older face.
 
+**Realistic display** — the head is drawn as a face rather than a clay
+mask: skin with pore-level relief and soft shading, eyes with a recessed
+iris, a clear cornea that catches the light, a wet lid margin and tear
+duct, lips, a jaw line, a closed nose base with nostrils, soft cast shadows
+(lashes shadow the lid), and portrait studio lighting through a portrait
+lens. "Skin display" in the View panel offers six tones plus the original
+clay for pure form study. It is a display setting only: it is not saved in
+scenarios, has no anatomical meaning, and changes no measurement.
+
 **Lash design** — procedural natural lashes plus extensions with real
 curl-family geometry (B/C/CC/D/L/M as measured heading-angle curves), a
 zone-based map editor (3–9 zones), and nine preset maps: natural, cat eye,

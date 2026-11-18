@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { DEFAULT_SKIN_TONE, type SkinToneId } from '../head/appearance'
 import type { AnatomyParams } from '../head/HeadModel'
 import { NEUTRAL_PARAMS } from '../head/HeadModel'
 import type { BrowParams } from '../brows/browDesign'
@@ -49,6 +50,8 @@ interface ViewState {
    *  even when the same preset is clicked twice. */
   presetNonce: number
   showLashLineDebug: boolean
+  /** Display-only: how the skin is rendered. Not part of a scenario. */
+  skinTone: SkinToneId
 }
 
 interface AppState {
@@ -79,6 +82,7 @@ interface AppState {
   resetFace: (face: FaceId) => void
   setPreset: (preset: ViewPreset) => void
   toggleLashLineDebug: () => void
+  setSkinTone: (skinTone: SkinToneId) => void
   setZone: (index: number, patch: Partial<LashZone>) => void
   setZoneCount: (count: ZoneCount) => void
   applyPreset: (name: string) => void
@@ -105,7 +109,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
   faces: { A: { ...NEUTRAL_PARAMS }, B: { ...NEUTRAL_PARAMS } },
   activeFace: 'A',
   compareMode: false,
-  view: { preset: 'free', presetNonce: 0, showLashLineDebug: false },
+  view: { preset: 'free', presetNonce: 0, showLashLineDebug: false, skinTone: DEFAULT_SKIN_TONE },
+
+  setSkinTone: (skinTone) => set((s) => ({ view: { ...s.view, skinTone } })),
 
   setFaceParam: (face, key, value) =>
     set((s) => ({

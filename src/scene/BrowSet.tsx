@@ -23,8 +23,8 @@ export function BrowSet({ head, faceId, eye }: { head: HeadModel; faceId: FaceId
 
   if (!showBrows) return null
   return (
-    <mesh geometry={set.geometry}>
-      <meshStandardMaterial color="#3a2f26" roughness={0.7} />
+    <mesh geometry={set.geometry} castShadow>
+      <meshStandardMaterial color="#2a2019" roughness={0.6} />
     </mesh>
   )
 }

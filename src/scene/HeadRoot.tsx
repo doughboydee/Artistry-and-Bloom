@@ -21,6 +21,7 @@ import { MappingLines } from './MappingLines'
 export function HeadRoot({ faceId }: { faceId: FaceId }) {
   const params = useAppStore((s) => s.faces[faceId])
   const showLashLineDebug = useAppStore((s) => s.view.showLashLineDebug)
+  const skinTone = useAppStore((s) => s.view.skinTone)
   const invalidate = useThree((s) => s.invalidate)
 
   const headSourceName = useAppStore((s) => s.headSourceName)
@@ -58,9 +59,14 @@ export function HeadRoot({ faceId }: { faceId: FaceId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [head, params])
 
+  // Display-only: never touches geometry, so nothing downstream regenerates.
+  useMemo(() => {
+    head.setAppearance?.({ skinTone })
+  }, [head, skinTone])
+
   useEffect(() => {
     invalidate()
-  }, [head, params, invalidate])
+  }, [head, params, skinTone, invalidate])
 
   // Debug: the lash-line samples the lash generator will attach to. Proves
   // the attachment contract tracks the lid margin under every parameter.

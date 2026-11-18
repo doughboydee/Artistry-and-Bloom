@@ -180,8 +180,9 @@ export function buildTubeGeometryFor(
       else side.normalize()
       up.crossVectors(side, dir)
 
-      // Taper: full diameter at the base → 30% at the tip.
-      const taper = 1 - 0.7 * (i / FIBER_STEPS)
+      // Taper like a real hair: the shaft holds its width for the first
+      // half, then draws down to a fine point.
+      const taper = 1 - 0.9 * (i / FIBER_STEPS) ** 1.7
       const r = (baseDiameters[f]! / 2) * taper
       for (let k = 0; k < TUBE_SIDES; k++) {
         const a = (k / TUBE_SIDES) * Math.PI * 2

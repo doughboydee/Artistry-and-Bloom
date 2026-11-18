@@ -103,7 +103,7 @@ export function buildBrowHairs(
     }
     anchorT[f] = u
     // Render-exaggerated like lashes; hairs also become finer with age.
-    baseDiameters[f] = browHairDiameterMm(params.caliber) * 3 * (1 - 0.25 * age)
+    baseDiameters[f] = browHairDiameterMm(params.caliber) * 2.3 * (1 - 0.25 * age)
     f++
   }
 
